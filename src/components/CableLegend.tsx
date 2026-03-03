@@ -31,14 +31,14 @@ export function CableLegend({
       className="shrink-0 border-t overflow-hidden transition-all duration-200"
       style={{
         height: open ? Math.min(200, 36 + cables.length * 32) : 28,
-        background: '#16161E',
-        borderColor: '#2a2a3a',
+        background: '#fafaf8',
+        borderColor: '#ddd',
       }}
     >
       <div
         className="flex items-center justify-between px-3 h-7 cursor-pointer select-none"
         onClick={onToggle}
-        style={{ borderBottom: open ? '1px solid #2a2a3a' : 'none' }}
+        style={{ borderBottom: open ? '1px solid #ddd' : 'none' }}
       >
         <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider">
           Patch Notes ({cables.length})
@@ -49,14 +49,14 @@ export function CableLegend({
       {open && (
         <div className="overflow-y-auto" style={{ maxHeight: 164 }}>
           {cables.length === 0 ? (
-            <div className="px-3 py-2 text-[10px] text-neutral-600">No cables yet</div>
+            <div className="px-3 py-2 text-[10px] text-neutral-400">No cables yet</div>
           ) : (
             cables.map(c => (
               <div
                 key={c.id}
                 className="flex items-center gap-2 px-3 py-1 cursor-pointer transition-colors"
                 style={{
-                  background: highlightedCableId === c.id ? 'rgba(255,255,255,0.05)' : 'transparent',
+                  background: highlightedCableId === c.id ? 'rgba(0,0,0,0.04)' : 'transparent',
                 }}
                 onClick={() => onHighlight(highlightedCableId === c.id ? null : c.id)}
               >
@@ -64,11 +64,11 @@ export function CableLegend({
                   className="w-3 h-3 rounded-full shrink-0"
                   style={{ background: c.color }}
                 />
-                <span className="text-[10px] text-neutral-300 shrink-0">
+                <span className="text-[10px] text-neutral-600 shrink-0">
                   {getLabel(c.fromModuleId, c.fromJackId)}
                 </span>
-                <span className="text-[10px] text-neutral-600">&rarr;</span>
-                <span className="text-[10px] text-neutral-300 shrink-0">
+                <span className="text-[10px] text-neutral-400">&rarr;</span>
+                <span className="text-[10px] text-neutral-600 shrink-0">
                   {getLabel(c.toModuleId, c.toJackId)}
                 </span>
                 <input

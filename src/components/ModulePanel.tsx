@@ -133,10 +133,10 @@ export function ModulePanel({
         ref={panelRef}
         className="relative w-full h-full"
         style={{
-          background: template.imageDataUrl ? undefined : '#1a1a2a',
-          border: `1px solid ${isEditing ? '#4a6a8a' : hovered ? '#3a3a5a' : '#2a2a3a'}`,
+          background: template.imageDataUrl ? undefined : '#f5f5f0',
+          border: `1px solid ${isEditing ? '#6a9aca' : hovered ? '#bbb' : '#ccc'}`,
           cursor: isEditing ? 'crosshair' : 'grab',
-          boxShadow: isEditing ? '0 0 8px rgba(74,106,138,0.3)' : undefined,
+          boxShadow: isEditing ? '0 0 8px rgba(106,154,202,0.3)' : undefined,
         }}
         onMouseDown={isEditing ? undefined : onDragStart}
         onClick={handleImageClick}
@@ -150,9 +150,9 @@ export function ModulePanel({
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-1">
-            <span className="text-xs text-neutral-400">{template.name}</span>
-            <span className="text-[9px] text-neutral-600">{template.brand}</span>
-            <span className="text-[9px] text-neutral-600">{template.hp}HP</span>
+            <span className="text-xs text-neutral-600">{template.name}</span>
+            <span className="text-[9px] text-neutral-400">{template.brand}</span>
+            <span className="text-[9px] text-neutral-400">{template.hp}HP</span>
           </div>
         )}
 
@@ -205,8 +205,8 @@ export function ModulePanel({
                 style={{
                   top: -14,
                   fontSize: 8,
-                  color: '#999',
-                  textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                  color: '#888',
+                  textShadow: '0 1px 2px rgba(255,255,255,0.8)',
                 }}
               >
                 {jack.label}
@@ -221,7 +221,7 @@ export function ModulePanel({
         <>
           <button
             className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center text-xs rounded-full transition-colors"
-            style={{ background: '#2a2a3a', color: '#888', border: '1px solid #3a3a4a' }}
+            style={{ background: '#fff', color: '#999', border: '1px solid #ccc' }}
             onClick={e => { e.stopPropagation(); onRemove(); }}
             onMouseDown={e => e.stopPropagation()}
             title="Remove module"
@@ -230,7 +230,7 @@ export function ModulePanel({
           </button>
           <button
             className="absolute -top-2 -right-9 h-5 px-1.5 flex items-center justify-center text-[9px] transition-colors"
-            style={{ background: '#2a2a3a', color: '#888', border: '1px solid #3a3a4a' }}
+            style={{ background: '#fff', color: '#999', border: '1px solid #ccc' }}
             onClick={e => { e.stopPropagation(); onStartEditing(); }}
             onMouseDown={e => e.stopPropagation()}
             title="Edit jacks"
@@ -244,11 +244,11 @@ export function ModulePanel({
       {isEditing && (
         <div
           className="absolute -top-7 left-0 right-0 flex items-center justify-between px-2 h-6"
-          style={{ background: '#1e2e3e', border: '1px solid #3a4a5a', fontSize: 10 }}
+          style={{ background: '#e8f0f8', border: '1px solid #a0b8d0', fontSize: 10 }}
         >
-          <span className="text-blue-300">Click to place jacks</span>
+          <span className="text-blue-600">Click to place jacks</span>
           <button
-            className="text-blue-200 hover:text-white transition-colors"
+            className="text-blue-500 hover:text-blue-800 transition-colors"
             onClick={e => { e.stopPropagation(); onStopEditing(); setEditingJack(null); }}
           >
             Done
@@ -305,24 +305,24 @@ function JackEditor({
         left: popoverLeft,
         top: jack.y * EURORACK_HEIGHT_PX - 20,
         width: 150,
-        background: '#1e1e2e',
-        border: '1px solid #3a3a5a',
+        background: '#fff',
+        border: '1px solid #ccc',
         fontSize: 10,
       }}
       onClick={e => e.stopPropagation()}
       onMouseDown={e => e.stopPropagation()}
     >
       <input
-        className="px-1.5 py-1 bg-transparent text-neutral-200 outline-none"
-        style={{ border: '1px solid #2a2a3a' }}
+        className="px-1.5 py-1 bg-transparent text-neutral-700 outline-none"
+        style={{ border: '1px solid #ddd' }}
         value={jack.label}
         onChange={e => onUpdate({ label: e.target.value })}
         placeholder="Jack label"
         autoFocus
       />
       <select
-        className="px-1.5 py-1 bg-transparent text-neutral-200 outline-none"
-        style={{ border: '1px solid #2a2a3a', background: '#16161E' }}
+        className="px-1.5 py-1 bg-transparent text-neutral-700 outline-none"
+        style={{ border: '1px solid #ddd', background: '#fafafa' }}
         value={jack.type}
         onChange={e => onUpdate({ type: e.target.value as JackType })}
       >
@@ -334,14 +334,14 @@ function JackEditor({
       <div className="flex gap-1">
         <button
           className="flex-1 py-0.5 text-red-400 hover:text-red-300 transition-colors"
-          style={{ border: '1px solid #3a2a2a' }}
+          style={{ border: '1px solid #e0c0c0' }}
           onClick={onRemove}
         >
           Delete
         </button>
         <button
-          className="flex-1 py-0.5 text-neutral-400 hover:text-neutral-200 transition-colors"
-          style={{ border: '1px solid #2a2a3a' }}
+          className="flex-1 py-0.5 text-neutral-500 hover:text-neutral-700 transition-colors"
+          style={{ border: '1px solid #ddd' }}
           onClick={onClose}
         >
           Close

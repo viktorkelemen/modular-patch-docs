@@ -123,7 +123,7 @@ export default function App() {
     const { toPng } = await import('html-to-image');
     try {
       const dataUrl = await toPng(el, {
-        backgroundColor: '#12121E',
+        backgroundColor: '#f0f0ec',
         pixelRatio: 2,
       });
       const a = document.createElement('a');

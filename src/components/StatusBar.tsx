@@ -14,7 +14,7 @@ export function StatusBar({ moduleCount, cableCount, zoom, onExportPNG, onExport
 
   return (
     <div className="h-7 flex items-center justify-between px-3 border-t"
-         style={{ background: '#16161E', borderColor: '#2a2a3a', fontSize: '11px' }}>
+         style={{ background: '#fafaf8', borderColor: '#ddd', fontSize: '11px' }}>
       <div className="flex items-center gap-4 text-neutral-400">
         <span>{moduleCount} module{moduleCount !== 1 ? 's' : ''}</span>
         <span>{cableCount} cable{cableCount !== 1 ? 's' : ''}</span>
@@ -22,15 +22,15 @@ export function StatusBar({ moduleCount, cableCount, zoom, onExportPNG, onExport
       </div>
       <div className="flex items-center gap-2">
         <button onClick={onExportPNG}
-                className="px-2 py-0.5 text-neutral-400 hover:text-neutral-200 transition-colors">
+                className="px-2 py-0.5 text-neutral-500 hover:text-neutral-700 transition-colors">
           Export PNG
         </button>
         <button onClick={onExportJSON}
-                className="px-2 py-0.5 text-neutral-400 hover:text-neutral-200 transition-colors">
+                className="px-2 py-0.5 text-neutral-500 hover:text-neutral-700 transition-colors">
           Export JSON
         </button>
         <button onClick={() => fileRef.current?.click()}
-                className="px-2 py-0.5 text-neutral-400 hover:text-neutral-200 transition-colors">
+                className="px-2 py-0.5 text-neutral-500 hover:text-neutral-700 transition-colors">
           Import JSON
         </button>
         <input ref={fileRef} type="file" accept=".json" className="hidden"

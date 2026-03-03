@@ -56,7 +56,7 @@ export const CABLE_COLORS = [
 export const EURORACK_HEIGHT_PX = 380;
 export const PX_PER_HP = 7.5;
 
-import dpoPanelUrl from './assets/dpo-panel.svg';
+import dpoPanelUrl from './assets/dpo-panel.png';
 
 export const DEFAULT_TEMPLATES: ModuleTemplate[] = [
   { id: 'dpo', name: 'DPO', brand: 'Make Noise', hp: 28, imageDataUrl: dpoPanelUrl, jacks: [] },

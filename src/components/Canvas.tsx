@@ -184,7 +184,7 @@ export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
       ref={containerRef}
       className="flex-1 relative overflow-hidden select-none"
       style={{
-        background: '#12121E',
+        background: '#f0f0ec',
         cursor: isPanning ? 'grabbing' : draggingCable ? 'crosshair' : 'default',
       }}
       onMouseDown={handleMouseDown}
@@ -260,7 +260,7 @@ function DotGrid({ pan, zoom }: { pan: { x: number; y: number }; zoom: number })
           height={spacing * zoom}
           patternUnits="userSpaceOnUse"
         >
-          <circle cx={dotSize} cy={dotSize} r={dotSize} fill="#2a2a3a" />
+          <circle cx={dotSize} cy={dotSize} r={dotSize} fill="#c0c0b8" />
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill="url(#dotGrid)" />
