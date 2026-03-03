@@ -148,8 +148,8 @@ export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
     const template = templates.find(t => t.id === mod.templateId);
     if (!template) return { x: 0, y: 0 };
 
-    const moduleWidth = template.imageDataUrl
-      ? template.hp * PX_PER_HP
+    const moduleWidth = template.imageAspect
+      ? EURORACK_HEIGHT_PX * template.imageAspect
       : template.hp * PX_PER_HP;
     const moduleHeight = EURORACK_HEIGHT_PX;
 

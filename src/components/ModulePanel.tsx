@@ -41,7 +41,9 @@ export function ModulePanel({
   const [draggingJackId, setDraggingJackId] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const width = template.hp * PX_PER_HP;
+  const width = template.imageAspect
+    ? EURORACK_HEIGHT_PX * template.imageAspect
+    : template.hp * PX_PER_HP;
   const height = EURORACK_HEIGHT_PX;
 
   const handleImageClick = useCallback((e: ReactMouseEvent) => {
