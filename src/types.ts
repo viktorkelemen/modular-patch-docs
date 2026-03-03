@@ -120,6 +120,31 @@ export const DEFAULT_TEMPLATES: ModuleTemplate[] = [
     { id: 'xpo-cntr',     label: 'CNTR',     type: 'cv-in',     x: 0.698, y: 0.880 },
     { id: 'xpo-rt',       label: 'RT',       type: 'cv-in',     x: 0.918, y: 0.881 },
   ] },
-  { id: 'qpas', name: 'QPAS', brand: 'Make Noise', hp: 24, imageDataUrl: qpasPanelUrl, imageAspect: 1310 / 1835, jacks: [] },
+  { id: 'qpas', name: 'QPAS', brand: 'Make Noise', hp: 24, imageDataUrl: qpasPanelUrl, imageAspect: 1310 / 1835, jacks: [
+    // Audio inputs
+    { id: 'qpas-in-l',      label: 'In L',        type: 'cv-in',     x: 0.082, y: 0.125 },
+    { id: 'qpas-in-r',      label: 'In R',        type: 'cv-in',     x: 0.232, y: 0.125 },
+    // CV inputs
+    { id: 'qpas-level',     label: 'Level',       type: 'cv-in',     x: 0.087, y: 0.286 },
+    { id: 'qpas-freq1',     label: 'Freq 1',      type: 'cv-in',     x: 0.402, y: 0.769 },
+    { id: 'qpas-freq2',     label: 'Freq 2',      type: 'cv-in',     x: 0.404, y: 0.875 },
+    { id: 'qpas-q',         label: 'Q',           type: 'cv-in',     x: 0.586, y: 0.877 },
+    { id: 'qpas-rad-l',     label: 'Radiate L',   type: 'cv-in',     x: 0.094, y: 0.875 },
+    { id: 'qpas-rad-r',     label: 'Radiate R',   type: 'cv-in',     x: 0.898, y: 0.876 },
+    { id: 'qpas-bang-l',    label: '!! L',        type: 'cv-in',     x: 0.237, y: 0.877 },
+    { id: 'qpas-bang-r',    label: '!! R',        type: 'cv-in',     x: 0.758, y: 0.876 },
+    // Outputs — LP
+    { id: 'qpas-lp-l',      label: 'LP L',        type: 'audio-out', x: 0.764, y: 0.126 },
+    { id: 'qpas-lp-r',      label: 'LP R',        type: 'audio-out', x: 0.909, y: 0.127 },
+    // Outputs — BP
+    { id: 'qpas-bp-l',      label: 'BP L',        type: 'audio-out', x: 0.763, y: 0.226 },
+    { id: 'qpas-bp-r',      label: 'BP R',        type: 'audio-out', x: 0.909, y: 0.225 },
+    // Outputs — HP
+    { id: 'qpas-hp-l',      label: 'HP L',        type: 'audio-out', x: 0.764, y: 0.327 },
+    { id: 'qpas-hp-r',      label: 'HP R',        type: 'audio-out', x: 0.911, y: 0.327 },
+    // Outputs — SP
+    { id: 'qpas-sp-l',      label: 'SP L',        type: 'audio-out', x: 0.763, y: 0.426 },
+    { id: 'qpas-sp-r',      label: 'SP R',        type: 'audio-out', x: 0.909, y: 0.429 },
+  ] },
   { id: 'maths', name: 'Maths', brand: 'Make Noise', hp: 20, imageDataUrl: mathsPanelUrl, imageAspect: 1450 / 1830, jacks: [] },
 ];
