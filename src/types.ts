@@ -1,4 +1,4 @@
-export type JackType = 'audio-in' | 'audio-out' | 'cv-in' | 'cv-out';
+export type JackType = 'audio-out' | 'cv-in';
 
 export interface JackDef {
   id: string;
@@ -67,29 +67,30 @@ export const DEFAULT_TEMPLATES: ModuleTemplate[] = [
   { id: 'dpo', name: 'DPO', brand: 'Make Noise', hp: 28, imageDataUrl: dpoPanelUrl, imageAspect: 1374 / 1258, jacks: [] },
   { id: 'xpo', name: 'XPO', brand: 'Make Noise', hp: 18, imageDataUrl: xpoPanelUrl, imageAspect: 1305 / 1830, jacks: [
     // Top row — mono waveform outputs
-    { id: 'xpo-sine',     label: 'Sine',     type: 'audio-out', x: 0.077, y: 0.071 },
-    { id: 'xpo-tri',      label: 'Triangle', type: 'audio-out', x: 0.222, y: 0.071 },
-    { id: 'xpo-saw',      label: 'Saw',      type: 'audio-out', x: 0.372, y: 0.071 },
-    { id: 'xpo-spike',    label: 'Spike',    type: 'audio-out', x: 0.513, y: 0.071 },
-    { id: 'xpo-sub',      label: 'Sub',      type: 'audio-out', x: 0.636, y: 0.071 },
+    { id: 'xpo-sine',     label: 'Sine',     type: 'audio-out', x: 0.081, y: 0.129 },
+    { id: 'xpo-tri',      label: 'Triangle', type: 'audio-out', x: 0.221, y: 0.127 },
+    { id: 'xpo-saw',      label: 'Saw',      type: 'audio-out', x: 0.362, y: 0.129 },
+    { id: 'xpo-spike',    label: 'Spike',    type: 'audio-out', x: 0.505, y: 0.127 },
+    { id: 'xpo-sub',      label: 'Sub',      type: 'audio-out', x: 0.645, y: 0.127 },
     // Sync input (top-right)
-    { id: 'xpo-sync',     label: 'Sync',     type: 'audio-in',  x: 0.912, y: 0.074 },
+    { id: 'xpo-sync',     label: 'Sync',     type: 'cv-in',     x: 0.846, y: 0.125 },
     // FM section
-    { id: 'xpo-fm',       label: 'FM In',    type: 'audio-in',  x: 0.107, y: 0.192 },
+    { id: 'xpo-fm',       label: 'FM In',    type: 'cv-in',     x: 0.221, y: 0.247 },
+    { id: 'xpo-fm-cv',    label: 'FM CV',    type: 'cv-in',     x: 0.079, y: 0.289 },
     // Stereo outputs — right side (L [MONO] / R-OUT columns)
-    { id: 'xpo-pwm-l',    label: 'PWM L',    type: 'audio-out', x: 0.682, y: 0.167 },
-    { id: 'xpo-pwm-r',    label: 'PWM R',    type: 'audio-out', x: 0.850, y: 0.167 },
-    { id: 'xpo-vt-l',     label: 'VarTim L', type: 'audio-out', x: 0.682, y: 0.240 },
-    { id: 'xpo-vt-r',     label: 'VarTim R', type: 'audio-out', x: 0.850, y: 0.240 },
-    { id: 'xpo-fold-l',   label: 'Fold L',   type: 'audio-out', x: 0.682, y: 0.311 },
-    { id: 'xpo-fold-r',   label: 'Fold R',   type: 'audio-out', x: 0.850, y: 0.311 },
+    { id: 'xpo-pwm-l',    label: 'PWM L',    type: 'audio-out', x: 0.772, y: 0.228 },
+    { id: 'xpo-pwm-r',    label: 'PWM R',    type: 'audio-out', x: 0.917, y: 0.230 },
+    { id: 'xpo-vt-l',     label: 'VarTim L', type: 'audio-out', x: 0.771, y: 0.329 },
+    { id: 'xpo-vt-r',     label: 'VarTim R', type: 'audio-out', x: 0.916, y: 0.329 },
+    { id: 'xpo-fold-l',   label: 'Fold L',   type: 'audio-out', x: 0.771, y: 0.430 },
+    { id: 'xpo-fold-r',   label: 'Fold R',   type: 'audio-out', x: 0.916, y: 0.432 },
     // Bottom row — CV inputs
-    { id: 'xpo-lft',      label: 'LFT',      type: 'cv-in',     x: 0.077, y: 0.918 },
-    { id: 'xpo-voct1',    label: 'V/Oct',    type: 'cv-in',     x: 0.249, y: 0.918 },
-    { id: 'xpo-expo',     label: 'Expo',     type: 'cv-in',     x: 0.414, y: 0.918 },
-    { id: 'xpo-voct2',    label: 'V/Oct',    type: 'cv-in',     x: 0.536, y: 0.918 },
-    { id: 'xpo-cntr',     label: 'CNTR',     type: 'cv-in',     x: 0.690, y: 0.918 },
-    { id: 'xpo-rt',       label: 'RT',       type: 'cv-in',     x: 0.923, y: 0.918 },
+    { id: 'xpo-lft',      label: 'LFT',      type: 'cv-in',     x: 0.077, y: 0.881 },
+    { id: 'xpo-voct1',    label: 'V/Oct',    type: 'cv-in',     x: 0.250, y: 0.881 },
+    { id: 'xpo-expo',     label: 'Expo',     type: 'cv-in',     x: 0.392, y: 0.882 },
+    { id: 'xpo-voct2',    label: 'V/Oct',    type: 'cv-in',     x: 0.530, y: 0.882 },
+    { id: 'xpo-cntr',     label: 'CNTR',     type: 'cv-in',     x: 0.698, y: 0.880 },
+    { id: 'xpo-rt',       label: 'RT',       type: 'cv-in',     x: 0.918, y: 0.881 },
   ] },
   { id: 'qpas', name: 'QPAS', brand: 'Make Noise', hp: 24, imageDataUrl: qpasPanelUrl, imageAspect: 1310 / 1835, jacks: [] },
   { id: 'maths', name: 'Maths', brand: 'Make Noise', hp: 20, imageDataUrl: mathsPanelUrl, imageAspect: 1450 / 1830, jacks: [] },

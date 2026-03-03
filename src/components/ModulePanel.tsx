@@ -24,10 +24,8 @@ interface Props {
 }
 
 const JACK_TYPE_COLORS: Record<JackType, string> = {
-  'audio-in': '#3b82f6',
-  'audio-out': '#60a5fa',
+  'audio-out': '#3b82f6',
   'cv-in': '#f97316',
-  'cv-out': '#fbbf24',
 };
 
 export function ModulePanel({
@@ -94,29 +92,25 @@ export function ModulePanel({
   }, [module.jacks, onUpdateJacks, onUpdateTemplateJacks]);
 
   const handleJackDragStart = useCallback((jackId: string, e: ReactMouseEvent) => {
-    if (isEditing) {
-      // In edit mode, drag to reposition
-      e.stopPropagation();
-      setDraggingJackId(jackId);
-      const handleMove = (ev: globalThis.MouseEvent) => {
-        const rect = panelRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        const x = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
-        const y = Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height));
-        updateJack(jackId, { x, y });
-      };
-      const handleUp = () => {
-        setDraggingJackId(null);
-        window.removeEventListener('mousemove', handleMove);
-        window.removeEventListener('mouseup', handleUp);
-      };
-      window.addEventListener('mousemove', handleMove);
-      window.addEventListener('mouseup', handleUp);
-    } else {
-      // Normal mode: start cable drawing
-      onJackDragStart(jackId, e);
-    }
-  }, [isEditing, onJackDragStart, updateJack]);
+    // Always allow dragging to reposition
+    e.stopPropagation();
+    e.preventDefault();
+    setDraggingJackId(jackId);
+    const handleMove = (ev: globalThis.MouseEvent) => {
+      const rect = panelRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const x = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+      const y = Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height));
+      updateJack(jackId, { x, y });
+    };
+    const handleUp = () => {
+      setDraggingJackId(null);
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+  }, [updateJack]);
 
   return (
     <div
@@ -172,7 +166,7 @@ export function ModulePanel({
                 width: 28,
                 height: 28,
                 zIndex: draggingJackId === jack.id ? 20 : 10,
-                cursor: isEditing ? 'move' : 'pointer',
+                cursor: 'move',
               }}
               onMouseDown={e => { e.stopPropagation(); handleJackDragStart(jack.id, e); }}
               onMouseUp={() => {
@@ -232,65 +226,50 @@ export function ModulePanel({
       </div>
 
       {/* Hover controls */}
-      {hovered && !isEditing && (
-        <>
-          <button
-            className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center text-xs rounded-full transition-colors"
-            style={{ background: '#fff', color: '#999', border: '1px solid #ccc' }}
-            onClick={e => { e.stopPropagation(); onRemove(); }}
-            onMouseDown={e => e.stopPropagation()}
-            title="Remove module"
-          >
-            &times;
-          </button>
-          <button
-            className="absolute -top-2 -right-9 h-5 px-1.5 flex items-center justify-center text-[9px] transition-colors"
-            style={{ background: '#fff', color: '#999', border: '1px solid #ccc' }}
-            onClick={e => { e.stopPropagation(); onStartEditing(); }}
-            onMouseDown={e => e.stopPropagation()}
-            title="Edit jacks"
-          >
-            jacks
-          </button>
-        </>
-      )}
-
-      {/* Edit mode bar */}
-      {isEditing && (
-        <div
-          className="absolute -top-7 left-0 right-0 flex items-center justify-between px-2 h-6"
-          style={{ background: '#e8f0f8', border: '1px solid #a0b8d0', fontSize: 10 }}
+      {hovered && (
+        <button
+          className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center text-xs rounded-full transition-colors"
+          style={{ background: '#fff', color: '#999', border: '1px solid #ccc' }}
+          onClick={e => { e.stopPropagation(); onRemove(); }}
+          onMouseDown={e => e.stopPropagation()}
+          title="Remove module"
         >
-          <span className="text-blue-600">Click to place jacks</span>
-          <button
-            className="text-blue-500 hover:text-blue-800 transition-colors"
-            onClick={e => { e.stopPropagation(); onStopEditing(); setEditingJack(null); }}
-          >
-            Done
-          </button>
-        </div>
+          &times;
+        </button>
       )}
 
-      {/* Jack editor popover */}
-      {isEditing && editingJack && (() => {
-        const jack = module.jacks.find(j => j.id === editingJack);
-        if (!jack) return null;
-        return (
-          <JackEditor
-            jack={jack}
-            panelWidth={width}
-            onUpdate={updates => updateJack(editingJack, updates)}
-            onRemove={() => removeJack(editingJack)}
-            onClose={() => setEditingJack(null)}
-          />
-        );
-      })()}
+      {/* Big copy button */}
+      {module.jacks.length > 0 && (
+        <button
+          className="absolute left-1/2 -translate-x-1/2 px-4 py-1.5 text-xs font-medium transition-colors"
+          style={{
+            bottom: -30,
+            background: '#3b82f6',
+            color: '#fff',
+            border: '1px solid #2563eb',
+            borderRadius: 4,
+            zIndex: 20,
+          }}
+          onClick={e => {
+            e.stopPropagation();
+            const json = JSON.stringify(module.jacks.map(j => ({
+              id: j.id, label: j.label, type: j.type,
+              x: +j.x.toFixed(3), y: +j.y.toFixed(3),
+            })), null, 2);
+            navigator.clipboard.writeText(json);
+            console.log('Jack positions copied:\n' + json);
+          }}
+          onMouseDown={e => e.stopPropagation()}
+        >
+          Copy Positions
+        </button>
+      )}
 
       {/* Module name label */}
       <div
         className="absolute left-0 right-0 text-center pointer-events-none"
         style={{
-          bottom: -16,
+          bottom: -48,
           fontSize: 9,
           color: '#666',
         }}
@@ -341,10 +320,8 @@ function JackEditor({
         value={jack.type}
         onChange={e => onUpdate({ type: e.target.value as JackType })}
       >
-        <option value="audio-in">Audio In</option>
         <option value="audio-out">Audio Out</option>
         <option value="cv-in">CV In</option>
-        <option value="cv-out">CV Out</option>
       </select>
       <div className="flex gap-1">
         <button
