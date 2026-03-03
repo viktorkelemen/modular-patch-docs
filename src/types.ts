@@ -57,12 +57,13 @@ export const EURORACK_HEIGHT_PX = 380;
 export const PX_PER_HP = 7.5;
 
 import dpoPanelUrl from './assets/dpo-panel.png';
+import xpoPanelUrl from './assets/xpo-panel.png';
 
 export const DEFAULT_TEMPLATES: ModuleTemplate[] = [
   { id: 'dpo', name: 'DPO', brand: 'Make Noise', hp: 28, imageDataUrl: dpoPanelUrl, jacks: [] },
+  { id: 'xpo', name: 'XPO', brand: 'Make Noise', hp: 18, imageDataUrl: xpoPanelUrl, jacks: [] },
   { id: 'qpas', name: 'QPAS', brand: 'Make Noise', hp: 24, imageDataUrl: null, jacks: [] },
   { id: 'maths', name: 'Maths', brand: 'Make Noise', hp: 20, imageDataUrl: null, jacks: [] },
-  { id: 'plaits', name: 'Plaits', brand: 'Mutable Instruments', hp: 12, imageDataUrl: null, jacks: [] },
   { id: 'rings', name: 'Rings', brand: 'Mutable Instruments', hp: 14, imageDataUrl: null, jacks: [] },
   { id: 'clouds', name: 'Clouds', brand: 'Mutable Instruments', hp: 18, imageDataUrl: null, jacks: [] },
 ];
