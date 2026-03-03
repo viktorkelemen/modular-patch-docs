@@ -52,7 +52,7 @@ export function Sidebar({ open, onToggle, templates, onAddTemplate, onPlaceModul
                 }}
               >
                 {t.imageDataUrl ? (
-                  <img src={t.imageDataUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={t.imageDataUrl} alt="" className="w-full h-full object-contain" />
                 ) : (
                   <span>{t.hp}</span>
                 )}
