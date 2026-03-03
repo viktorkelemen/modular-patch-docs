@@ -64,7 +64,35 @@ import mathsPanelUrl from './assets/maths-panel.png';
 import qpasPanelUrl from './assets/qpas-panel.png';
 
 export const DEFAULT_TEMPLATES: ModuleTemplate[] = [
-  { id: 'dpo', name: 'DPO', brand: 'Make Noise', hp: 28, imageDataUrl: dpoPanelUrl, imageAspect: 1374 / 1258, jacks: [] },
+  { id: 'dpo', name: 'DPO', brand: 'Make Noise', hp: 28, imageDataUrl: dpoPanelUrl, imageAspect: 1374 / 1258, jacks: [
+    // VCO A outputs
+    { id: 'dpo-a-tri',      label: 'A Tri',       type: 'audio-out', x: 0.069, y: 0.134 },
+    { id: 'dpo-a-saw',      label: 'A Saw',       type: 'audio-out', x: 0.147, y: 0.136 },
+    { id: 'dpo-a-sine',     label: 'A Sine',      type: 'audio-out', x: 0.230, y: 0.133 },
+    // VCO B outputs
+    { id: 'dpo-b-sine',     label: 'B Sine',      type: 'audio-out', x: 0.407, y: 0.134 },
+    { id: 'dpo-b-square',   label: 'B Square',    type: 'audio-out', x: 0.490, y: 0.134 },
+    // Final output
+    { id: 'dpo-final',      label: 'Final',       type: 'audio-out', x: 0.572, y: 0.133 },
+    // VCO A inputs
+    { id: 'dpo-a-expo',     label: 'A Expo',      type: 'cv-in',     x: 0.070, y: 0.856 },
+    { id: 'dpo-a-voct',     label: 'A 1V/Oct',    type: 'cv-in',     x: 0.152, y: 0.856 },
+    { id: 'dpo-a-lin',      label: 'A Lin FM',    type: 'cv-in',     x: 0.231, y: 0.857 },
+    // VCO B inputs
+    { id: 'dpo-b-lin',      label: 'B Lin FM',    type: 'cv-in',     x: 0.406, y: 0.859 },
+    { id: 'dpo-b-voct',     label: 'B 1V/Oct',    type: 'cv-in',     x: 0.490, y: 0.857 },
+    { id: 'dpo-b-expo',     label: 'B Expo',      type: 'cv-in',     x: 0.569, y: 0.857 },
+    { id: 'dpo-b-extlock',  label: 'B Ext Lock',  type: 'cv-in',     x: 0.447, y: 0.763 },
+    // Processing inputs
+    { id: 'dpo-follow',     label: 'Follow',      type: 'cv-in',     x: 0.318, y: 0.248 },
+    { id: 'dpo-fmbus',      label: 'FM Bus Idx',  type: 'cv-in',     x: 0.319, y: 0.856 },
+    { id: 'dpo-shape',      label: 'Shape',       type: 'cv-in',     x: 0.927, y: 0.141 },
+    { id: 'dpo-angle',      label: 'Angle',       type: 'cv-in',     x: 0.927, y: 0.326 },
+    { id: 'dpo-modbus',     label: 'Mod Bus Idx', type: 'cv-in',     x: 0.745, y: 0.852 },
+    { id: 'dpo-extsrc',     label: 'Ext Src',     type: 'cv-in',     x: 0.661, y: 0.857 },
+    { id: 'dpo-fold',       label: 'Fold',        type: 'cv-in',     x: 0.926, y: 0.858 },
+    { id: 'dpo-strike',     label: 'Strike',      type: 'cv-in',     x: 0.847, y: 0.857 },
+  ] },
   { id: 'xpo', name: 'XPO', brand: 'Make Noise', hp: 18, imageDataUrl: xpoPanelUrl, imageAspect: 1305 / 1830, jacks: [
     // Top row — mono waveform outputs
     { id: 'xpo-sine',     label: 'Sine',     type: 'audio-out', x: 0.081, y: 0.129 },
