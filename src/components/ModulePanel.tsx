@@ -159,63 +159,76 @@ export function ModulePanel({
         )}
 
         {/* Jack markers */}
-        {module.jacks.map(jack => (
-          <div
-            key={jack.id}
-            className="absolute group flex items-center justify-center"
-            style={{
-              left: `${jack.x * 100}%`,
-              top: `${jack.y * 100}%`,
-              transform: 'translate(-50%, -50%)',
-              width: 28,
-              height: 28,
-              zIndex: draggingJackId === jack.id ? 20 : 10,
-              cursor: isEditing ? 'move' : 'crosshair',
-            }}
-            onMouseDown={e => { e.stopPropagation(); handleJackDragStart(jack.id, e); }}
-            onMouseUp={() => {
-              if (isDraggingCable && !isEditing) {
-                onJackDrop(jack.id);
-              }
-            }}
-          >
-            {/* Jack ring */}
+        {module.jacks.map(jack => {
+          const color = JACK_TYPE_COLORS[jack.type];
+          return (
             <div
-              className="rounded-full flex items-center justify-center"
+              key={jack.id}
+              className="absolute group flex items-center justify-center"
               style={{
-                width: 14,
-                height: 14,
-                background: '#111',
-                border: `2px solid #888`,
-                boxShadow: `0 0 4px ${JACK_TYPE_COLORS[jack.type]}40, inset 0 1px 2px rgba(0,0,0,0.5)`,
+                left: `${jack.x * 100}%`,
+                top: `${jack.y * 100}%`,
+                transform: 'translate(-50%, -50%)',
+                width: 28,
+                height: 28,
+                zIndex: draggingJackId === jack.id ? 20 : 10,
+                cursor: isEditing ? 'move' : 'pointer',
+              }}
+              onMouseDown={e => { e.stopPropagation(); handleJackDragStart(jack.id, e); }}
+              onMouseUp={() => {
+                if (isDraggingCable && !isEditing) {
+                  onJackDrop(jack.id);
+                }
               }}
             >
+              {/* Outer glow — always visible */}
               <div
-                className="rounded-full"
+                className="absolute rounded-full transition-transform duration-150 group-hover:scale-[1.4]"
                 style={{
-                  width: 4,
-                  height: 4,
-                  background: JACK_TYPE_COLORS[jack.type],
-                  boxShadow: `0 0 3px ${JACK_TYPE_COLORS[jack.type]}`,
+                  width: 20,
+                  height: 20,
+                  background: `${color}40`,
+                  border: `2px solid ${color}`,
+                  boxShadow: `0 0 6px ${color}80, 0 0 12px ${color}40`,
                 }}
               />
-            </div>
-            {/* Jack label */}
-            {jack.label && !isEditing && (
+              {/* White contrast ring */}
               <div
-                className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none"
+                className="absolute rounded-full"
                 style={{
-                  top: -14,
-                  fontSize: 8,
-                  color: '#888',
-                  textShadow: '0 1px 2px rgba(255,255,255,0.8)',
+                  width: 10,
+                  height: 10,
+                  background: 'rgba(255,255,255,0.85)',
+                  border: `2px solid ${color}`,
                 }}
-              >
-                {jack.label}
-              </div>
-            )}
-          </div>
-        ))}
+              />
+              {/* Center dot */}
+              <div
+                className="rounded-full relative"
+                style={{
+                  width: 5,
+                  height: 5,
+                  background: color,
+                }}
+              />
+              {/* Jack label — always visible */}
+              {jack.label && !isEditing && (
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none"
+                  style={{
+                    top: -13,
+                    fontSize: 7,
+                    color: '#666',
+                    textShadow: '0 0 3px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.6)',
+                    fontWeight: 500,
+                  }}
+                >
+                  {jack.label}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Hover controls */}
