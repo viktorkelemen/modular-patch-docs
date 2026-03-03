@@ -58,10 +58,11 @@ export const PX_PER_HP = 15;
 
 import dpoPanelUrl from './assets/dpo-panel.png';
 import xpoPanelUrl from './assets/xpo-panel.png';
+import mathsPanelUrl from './assets/maths-panel.png';
 
 export const DEFAULT_TEMPLATES: ModuleTemplate[] = [
   { id: 'dpo', name: 'DPO', brand: 'Make Noise', hp: 28, imageDataUrl: dpoPanelUrl, jacks: [] },
   { id: 'xpo', name: 'XPO', brand: 'Make Noise', hp: 18, imageDataUrl: xpoPanelUrl, jacks: [] },
   { id: 'qpas', name: 'QPAS', brand: 'Make Noise', hp: 24, imageDataUrl: null, jacks: [] },
-  { id: 'maths', name: 'Maths', brand: 'Make Noise', hp: 20, imageDataUrl: null, jacks: [] },
+  { id: 'maths', name: 'Maths', brand: 'Make Noise', hp: 20, imageDataUrl: mathsPanelUrl, jacks: [] },
 ];
