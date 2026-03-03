@@ -56,8 +56,10 @@ export const CABLE_COLORS = [
 export const EURORACK_HEIGHT_PX = 380;
 export const PX_PER_HP = 7.5;
 
+import dpoPanelUrl from './assets/dpo-panel.svg';
+
 export const DEFAULT_TEMPLATES: ModuleTemplate[] = [
-  { id: 'dpo', name: 'DPO', brand: 'Make Noise', hp: 28, imageDataUrl: null, jacks: [] },
+  { id: 'dpo', name: 'DPO', brand: 'Make Noise', hp: 28, imageDataUrl: dpoPanelUrl, jacks: [] },
   { id: 'qpas', name: 'QPAS', brand: 'Make Noise', hp: 24, imageDataUrl: null, jacks: [] },
   { id: 'maths', name: 'Maths', brand: 'Make Noise', hp: 20, imageDataUrl: null, jacks: [] },
   { id: 'plaits', name: 'Plaits', brand: 'Mutable Instruments', hp: 12, imageDataUrl: null, jacks: [] },
