@@ -160,14 +160,17 @@ export function ModulePanel({
         {module.jacks.map(jack => (
           <div
             key={jack.id}
-            className="absolute group"
+            className="absolute group flex items-center justify-center"
             style={{
               left: `${jack.x * 100}%`,
               top: `${jack.y * 100}%`,
               transform: 'translate(-50%, -50%)',
+              width: 28,
+              height: 28,
               zIndex: draggingJackId === jack.id ? 20 : 10,
+              cursor: isEditing ? 'move' : 'crosshair',
             }}
-            onMouseDown={e => handleJackDragStart(jack.id, e)}
+            onMouseDown={e => { e.stopPropagation(); handleJackDragStart(jack.id, e); }}
             onMouseUp={() => {
               if (isDraggingCable && !isEditing) {
                 onJackDrop(jack.id);
@@ -183,7 +186,6 @@ export function ModulePanel({
                 background: '#111',
                 border: `2px solid #888`,
                 boxShadow: `0 0 4px ${JACK_TYPE_COLORS[jack.type]}40, inset 0 1px 2px rgba(0,0,0,0.5)`,
-                cursor: isEditing ? 'move' : 'crosshair',
               }}
             >
               <div

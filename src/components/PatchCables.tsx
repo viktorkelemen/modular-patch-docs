@@ -36,8 +36,8 @@ export function PatchCables({
       style={{
         top: 0,
         left: 0,
-        width: '100%',
-        height: '100%',
+        width: 1,
+        height: 1,
         overflow: 'visible',
         zIndex: 5,
       }}
