@@ -33,7 +33,7 @@ export function Sidebar({ open, onToggle, templates, onAddTemplate, onPlaceModul
         }}
       >
         <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: '#ddd' }}>
-          <span className="text-xs font-medium text-neutral-600 uppercase tracking-wider">Modules</span>
+          <span className="text-sm font-medium text-neutral-600 uppercase tracking-wider">Modules</span>
           <button onClick={onToggle} className="text-neutral-400 hover:text-neutral-600 text-sm">&lsaquo;</button>
         </div>
 
@@ -58,8 +58,8 @@ export function Sidebar({ open, onToggle, templates, onAddTemplate, onPlaceModul
                 )}
               </div>
               <div className="min-w-0">
-                <div className="text-xs text-neutral-700 truncate">{t.name}</div>
-                <div className="text-[10px] text-neutral-400 truncate">{t.brand} &middot; {t.hp}HP</div>
+                <div className="text-sm text-neutral-700 truncate">{t.name}</div>
+                <div className="text-xs text-neutral-400 truncate">{t.brand} &middot; {t.hp}HP</div>
               </div>
             </button>
           ))}
@@ -68,7 +68,7 @@ export function Sidebar({ open, onToggle, templates, onAddTemplate, onPlaceModul
         <div className="px-2 py-2 border-t" style={{ borderColor: '#ddd' }}>
           <button
             onClick={() => setShowUpload(true)}
-            className="w-full py-1.5 text-xs text-neutral-500 hover:text-neutral-700 transition-colors"
+            className="w-full py-1.5 text-sm text-neutral-500 hover:text-neutral-700 transition-colors"
             style={{ background: '#f0f0ec', border: '1px solid #ddd' }}
           >
             + Upload Module
