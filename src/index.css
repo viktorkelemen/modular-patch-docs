@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #12121E;
+  color: #ccc;
+  font-size: 12px;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #16161E;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a3a;
+  border-radius: 3px;
+}
