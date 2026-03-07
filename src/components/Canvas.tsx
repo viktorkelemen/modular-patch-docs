@@ -21,16 +21,21 @@ interface Props {
   onZoomChange: (z: number) => void;
   onMoveModule: (id: string, x: number, y: number) => void;
   onRemoveModule: (id: string) => void;
+  onDragStart: () => void;
   onAddCable: (fromModuleId: string, fromJackId: string, toModuleId: string, toJackId: string) => void;
   onRemoveCable: (cableId: string) => void;
   highlightedCableId: string | null;
+  selectedModuleId: string | null;
+  onSelectModule: (id: string | null) => void;
+  onDuplicateModule: (id: string) => void;
 }
 
 export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
   {
     modules, cables, templates, zoom, onZoomChange,
-    onMoveModule, onRemoveModule,
+    onMoveModule, onRemoveModule, onDragStart,
     onAddCable, onRemoveCable, highlightedCableId,
+    selectedModuleId, onSelectModule, onDuplicateModule,
   },
   ref,
 ) {
@@ -72,7 +77,22 @@ export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
       setIsPanning(true);
       panStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
     }
-  }, [pan]);
+    // Click on empty canvas deselects
+    if (e.button === 0 && !e.altKey) {
+      onSelectModule(null);
+    }
+  }, [pan, onSelectModule]);
+
+  // Cancel cable drag on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && draggingCable) {
+        setDraggingCable(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [draggingCable]);
 
   useEffect(() => {
     const handleMove = (e: globalThis.MouseEvent) => {
@@ -129,12 +149,14 @@ export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
     const pos = screenToCanvas(e.clientX, e.clientY);
     const mod = modules.find(m => m.id === moduleId);
     if (!mod) return;
+    onDragStart(); // Push history for undo
     setDraggingModule({
       moduleId,
       offsetX: pos.x - mod.x,
       offsetY: pos.y - mod.y,
     });
-  }, [modules, screenToCanvas]);
+    onSelectModule(moduleId);
+  }, [modules, screenToCanvas, onDragStart, onSelectModule]);
 
   const getJackWorldPos = useCallback((moduleId: string, jackId: string) => {
     const mod = modules.find(m => m.id === moduleId);
@@ -176,6 +198,13 @@ export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
     }
     setDraggingCable(null);
   }, [draggingCable, onAddCable, modules]);
+
+  // Right-click context menu for duplicate
+  const handleContextMenu = useCallback((moduleId: string, e: ReactMouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDuplicateModule(moduleId);
+  }, [onDuplicateModule]);
 
   return (
     <div
@@ -221,11 +250,15 @@ export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
               key={mod.id}
               module={mod}
               template={template}
+              isSelected={mod.id === selectedModuleId}
               onDragStart={e => handleModuleDragStart(mod.id, e)}
               onRemove={() => onRemoveModule(mod.id)}
               onJackDragStart={(jackId, e) => handleJackDragStart(mod.id, jackId, e)}
               onJackDrop={jackId => handleJackDrop(mod.id, jackId)}
               isDraggingCable={!!draggingCable}
+              draggingCableFrom={draggingCable ? { moduleId: draggingCable.fromModuleId, jackId: draggingCable.fromJackId } : null}
+              allModules={modules}
+              onContextMenu={e => handleContextMenu(mod.id, e)}
             />
           );
         })}

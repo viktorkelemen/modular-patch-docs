@@ -1,5 +1,5 @@
 import type { ModuleTemplate, PlacedModule, Cable, PatchState } from './types';
-import { EURORACK_HEIGHT_PX, PX_PER_HP } from './types';
+import { EURORACK_HEIGHT_PX, PX_PER_HP, isOutputType, isInputType } from './types';
 
 export function getModuleWidth(t: ModuleTemplate): number {
   return t.imageAspect ? EURORACK_HEIGHT_PX * t.imageAspect : t.hp * PX_PER_HP;
@@ -74,11 +74,97 @@ export function canConnect(
   const fromJack = fromMod?.jacks.find(j => j.id === fromJackId);
   const toJack = toMod?.jacks.find(j => j.id === toJackId);
   if (!fromJack || !toJack) return false;
-  return fromJack.type !== toJack.type;
+  // One must be output, one must be input
+  return (isOutputType(fromJack.type) && isInputType(toJack.type)) ||
+         (isInputType(fromJack.type) && isOutputType(toJack.type));
 }
 
 export function removeCablesForModule(cables: Cable[], moduleId: string): Cable[] {
   return cables.filter(c => c.fromModuleId !== moduleId && c.toModuleId !== moduleId);
+}
+
+/** Build a text summary of signal routing chains. */
+export function buildSignalFlow(
+  cables: Cable[],
+  modules: PlacedModule[],
+  templates: ModuleTemplate[],
+): string[] {
+  const label = (moduleId: string, jackId: string) => {
+    const mod = modules.find(m => m.id === moduleId);
+    if (!mod) return '?';
+    const tpl = templates.find(t => t.id === mod.templateId);
+    const jack = mod.jacks.find(j => j.id === jackId);
+    return `${tpl?.name || '?'} ${jack?.label || '?'}`;
+  };
+
+  // Build adjacency: for each (module,jack), find what it connects to
+  // We treat from→to as the signal direction (output→input)
+  const adj = new Map<string, string[]>();
+  const hasIncoming = new Set<string>();
+
+  for (const c of cables) {
+    const fromKey = `${c.fromModuleId}:${c.fromJackId}`;
+    const toKey = `${c.toModuleId}:${c.toJackId}`;
+
+    // Determine direction: output→input
+    const fromMod = modules.find(m => m.id === c.fromModuleId);
+    const fromJack = fromMod?.jacks.find(j => j.id === c.fromJackId);
+    const isFromOutput = fromJack?.type.endsWith('-out');
+
+    const srcKey = isFromOutput ? fromKey : toKey;
+    const dstKey = isFromOutput ? toKey : fromKey;
+
+    if (!adj.has(srcKey)) adj.set(srcKey, []);
+    adj.get(srcKey)!.push(dstKey);
+    hasIncoming.add(dstKey);
+  }
+
+  // Find chain starts (sources with no incoming connections)
+  const starts = [...adj.keys()].filter(k => !hasIncoming.has(k));
+
+  // Build chains
+  const chains: string[] = [];
+  const visited = new Set<string>();
+
+  function walk(key: string): string[] {
+    if (visited.has(key)) return [];
+    visited.add(key);
+    const [modId, jackId] = key.split(':');
+    const result = [label(modId, jackId)];
+    const nexts = adj.get(key);
+    if (nexts && nexts.length > 0) {
+      for (const next of nexts) {
+        const [nModId, nJackId] = next.split(':');
+        const rest = walk(next);
+        if (rest.length > 0) {
+          result.push(...rest);
+        } else {
+          result.push(label(nModId, nJackId));
+        }
+      }
+    }
+    return result;
+  }
+
+  for (const start of starts) {
+    const chain = walk(start);
+    if (chain.length >= 2) {
+      chains.push(chain.join(' → '));
+    }
+  }
+
+  // Any cables not yet visited (cycles or disconnected)
+  for (const c of cables) {
+    const fromKey = `${c.fromModuleId}:${c.fromJackId}`;
+    const toKey = `${c.toModuleId}:${c.toJackId}`;
+    if (!visited.has(fromKey) && !visited.has(toKey)) {
+      chains.push(`${label(c.fromModuleId, c.fromJackId)} → ${label(c.toModuleId, c.toJackId)}`);
+      visited.add(fromKey);
+      visited.add(toKey);
+    }
+  }
+
+  return chains;
 }
 
 const STORAGE_KEY = 'modular-patch-docs';

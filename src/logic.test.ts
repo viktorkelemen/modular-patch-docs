@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { ModuleTemplate, PlacedModule, Cable } from './types';
-import { EURORACK_HEIGHT_PX, PX_PER_HP } from './types';
+import { EURORACK_HEIGHT_PX, PX_PER_HP, isOutputType, isInputType } from './types';
 import {
   getModuleWidth,
   findPlacementX,
   resolveCollision,
   canConnect,
   removeCablesForModule,
+  buildSignalFlow,
   loadSaved,
   savePatch,
 } from './logic';
@@ -210,6 +211,10 @@ describe('canConnect', () => {
       jacks: [
         { id: 'j-out', label: 'Out', type: 'audio-out', x: 0.5, y: 0.1 },
         { id: 'j-in', label: 'In', type: 'cv-in', x: 0.5, y: 0.9 },
+        { id: 'j-gate-out', label: 'Gate', type: 'gate-out', x: 0.3, y: 0.1 },
+        { id: 'j-gate-in', label: 'Gate In', type: 'gate-in', x: 0.3, y: 0.9 },
+        { id: 'j-trig-out', label: 'Trig', type: 'trigger-out', x: 0.7, y: 0.1 },
+        { id: 'j-trig-in', label: 'Trig In', type: 'trigger-in', x: 0.7, y: 0.9 },
       ],
     }),
     makeModule({
@@ -217,16 +222,29 @@ describe('canConnect', () => {
       jacks: [
         { id: 'j-out2', label: 'Out', type: 'audio-out', x: 0.5, y: 0.1 },
         { id: 'j-in2', label: 'In', type: 'cv-in', x: 0.5, y: 0.9 },
+        { id: 'j-gate-in2', label: 'Gate In', type: 'gate-in', x: 0.3, y: 0.9 },
       ],
     }),
   ];
 
-  it('allows output to input', () => {
+  it('allows audio-out to cv-in', () => {
     expect(canConnect('mod-a', 'j-out', 'mod-b', 'j-in2', modules)).toBe(true);
   });
 
-  it('allows input to output', () => {
+  it('allows cv-in to audio-out (reversed direction)', () => {
     expect(canConnect('mod-a', 'j-in', 'mod-b', 'j-out2', modules)).toBe(true);
+  });
+
+  it('allows gate-out to gate-in', () => {
+    expect(canConnect('mod-a', 'j-gate-out', 'mod-b', 'j-gate-in2', modules)).toBe(true);
+  });
+
+  it('allows audio-out to gate-in (cross-type)', () => {
+    expect(canConnect('mod-a', 'j-out', 'mod-b', 'j-gate-in2', modules)).toBe(true);
+  });
+
+  it('allows trigger-out to cv-in (cross-type)', () => {
+    expect(canConnect('mod-a', 'j-trig-out', 'mod-b', 'j-in2', modules)).toBe(true);
   });
 
   it('rejects output to output', () => {
@@ -237,11 +255,82 @@ describe('canConnect', () => {
     expect(canConnect('mod-a', 'j-in', 'mod-b', 'j-in2', modules)).toBe(false);
   });
 
+  it('rejects gate-out to audio-out', () => {
+    expect(canConnect('mod-a', 'j-gate-out', 'mod-b', 'j-out2', modules)).toBe(false);
+  });
+
   it('rejects same jack to itself', () => {
     expect(canConnect('mod-a', 'j-out', 'mod-a', 'j-out', modules)).toBe(false);
   });
 
   it('rejects when jack not found', () => {
     expect(canConnect('mod-a', 'nonexistent', 'mod-b', 'j-in2', modules)).toBe(false);
+  });
+});
+
+describe('isOutputType / isInputType', () => {
+  it('identifies output types', () => {
+    expect(isOutputType('audio-out')).toBe(true);
+    expect(isOutputType('gate-out')).toBe(true);
+    expect(isOutputType('trigger-out')).toBe(true);
+    expect(isOutputType('cv-in')).toBe(false);
+    expect(isOutputType('gate-in')).toBe(false);
+  });
+
+  it('identifies input types', () => {
+    expect(isInputType('cv-in')).toBe(true);
+    expect(isInputType('gate-in')).toBe(true);
+    expect(isInputType('trigger-in')).toBe(true);
+    expect(isInputType('audio-out')).toBe(false);
+    expect(isInputType('gate-out')).toBe(false);
+  });
+});
+
+describe('buildSignalFlow', () => {
+  const tpl = makeTemplate({ id: 'tpl-a', name: 'Synth' });
+  const modules: PlacedModule[] = [
+    makeModule({
+      id: 'mod-a', templateId: 'tpl-a', x: 0, y: 0,
+      jacks: [
+        { id: 'j-out', label: 'Out', type: 'audio-out', x: 0.5, y: 0.1 },
+      ],
+    }),
+    makeModule({
+      id: 'mod-b', templateId: 'tpl-a', x: 200, y: 0,
+      jacks: [
+        { id: 'j-in', label: 'In', type: 'cv-in', x: 0.5, y: 0.9 },
+        { id: 'j-out', label: 'Out', type: 'audio-out', x: 0.5, y: 0.1 },
+      ],
+    }),
+    makeModule({
+      id: 'mod-c', templateId: 'tpl-a', x: 400, y: 0,
+      jacks: [
+        { id: 'j-in', label: 'In', type: 'cv-in', x: 0.5, y: 0.9 },
+      ],
+    }),
+  ];
+
+  it('returns empty for no cables', () => {
+    expect(buildSignalFlow([], modules, [tpl])).toEqual([]);
+  });
+
+  it('builds a simple chain', () => {
+    const cables = [
+      makeCable({ id: 'c1', fromModuleId: 'mod-a', fromJackId: 'j-out', toModuleId: 'mod-b', toJackId: 'j-in' }),
+    ];
+    const flow = buildSignalFlow(cables, modules, [tpl]);
+    expect(flow).toHaveLength(1);
+    expect(flow[0]).toContain('Synth Out');
+    expect(flow[0]).toContain('→');
+    expect(flow[0]).toContain('Synth In');
+  });
+
+  it('chains multiple connections', () => {
+    const cables = [
+      makeCable({ id: 'c1', fromModuleId: 'mod-a', fromJackId: 'j-out', toModuleId: 'mod-b', toJackId: 'j-in' }),
+      makeCable({ id: 'c2', fromModuleId: 'mod-b', fromJackId: 'j-out', toModuleId: 'mod-c', toJackId: 'j-in' }),
+    ];
+    const flow = buildSignalFlow(cables, modules, [tpl]);
+    expect(flow.length).toBeGreaterThanOrEqual(1);
   });
 });
