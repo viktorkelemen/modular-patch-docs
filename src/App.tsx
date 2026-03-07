@@ -33,26 +33,21 @@ interface HistoryEntry {
 
 const MAX_HISTORY = 50;
 
-// Merge default jacks into saved templates that lost them
-function mergeDefaultJacks(savedTemplates: ModuleTemplate[]): ModuleTemplate[] {
-  return savedTemplates.map(st => {
-    if (st.jacks.length > 0) return st;
-    const def = DEFAULT_TEMPLATES.find(d => d.id === st.id);
-    if (def && def.jacks.length > 0) return { ...st, jacks: def.jacks };
-    return st;
-  });
+// Always use hardcoded DEFAULT_TEMPLATES, plus any user-uploaded custom templates from saved state
+function buildTemplates(savedTemplates?: ModuleTemplate[]): ModuleTemplate[] {
+  const defaultIds = new Set(DEFAULT_TEMPLATES.map(d => d.id));
+  const custom = (savedTemplates ?? []).filter(t => !defaultIds.has(t.id));
+  return [...DEFAULT_TEMPLATES, ...custom];
 }
 
 export default function App() {
   const saved = useRef(loadSaved());
   const [templates, setTemplates] = useState<ModuleTemplate[]>(() => {
-    const base = saved.current?.templates ?? DEFAULT_TEMPLATES;
-    return mergeDefaultJacks(base);
+    return buildTemplates(saved.current?.templates);
   });
   const [modules, setModules] = useState<PlacedModule[]>(() => {
-    // Also update placed modules whose jacks are empty but template has jacks
     const mods = saved.current?.modules ?? [];
-    const tpls = mergeDefaultJacks(saved.current?.templates ?? DEFAULT_TEMPLATES);
+    const tpls = buildTemplates(saved.current?.templates);
     return mods.map(m => {
       if (m.jacks.length > 0) return m;
       const tpl = tpls.find(t => t.id === m.templateId);

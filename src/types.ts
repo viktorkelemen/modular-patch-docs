@@ -172,33 +172,38 @@ export const DEFAULT_TEMPLATES: ModuleTemplate[] = [
   ] },
   { id: 'maths', name: 'Maths', brand: 'Make Noise', hp: 20, imageDataUrl: mathsPanelUrl, imageAspect: 1450 / 1830, jacks: [
     // Top row — trigger inputs & attenuverter inputs
-    { id: 'maths-trig1',  label: 'Trig 1',  type: 'gate-in',     x: 0.136, y: 0.095 },
-    { id: 'maths-in2',    label: 'In 2',     type: 'cv-in',       x: 0.350, y: 0.093 },
-    { id: 'maths-in3',    label: 'In 3',     type: 'cv-in',       x: 0.645, y: 0.093 },
-    { id: 'maths-trig4',  label: 'Trig 4',   type: 'gate-in',     x: 0.811, y: 0.093 },
+    { id: 'maths-trig1',  label: 'Trig 1',  type: 'gate-in',     x: 0.111, y: 0.126 },
+    { id: 'maths-in2',    label: 'In 2',     type: 'cv-in',       x: 0.207, y: 0.126 },
+    { id: 'maths-in3',    label: 'In 3',     type: 'cv-in',       x: 0.383, y: 0.128 },
+    { id: 'maths-trig4',  label: 'Trig 4',   type: 'gate-in',     x: 0.485, y: 0.126 },
     // Channel 1 CV inputs (left column)
-    { id: 'maths-rise1',  label: 'Rise 1',   type: 'cv-in',       x: 0.045, y: 0.250 },
-    { id: 'maths-fall1',  label: 'Fall 1',   type: 'cv-in',       x: 0.045, y: 0.483 },
-    { id: 'maths-in1',    label: 'In 1',     type: 'cv-in',       x: 0.045, y: 0.667 },
+    { id: 'maths-rise1',  label: 'Rise 1',   type: 'cv-in',       x: 0.042, y: 0.392 },
+    { id: 'maths-both1',  label: 'Both 1',   type: 'cv-in',       x: 0.059, y: 0.487 },
+    { id: 'maths-fall1',  label: 'Fall 1',   type: 'cv-in',       x: 0.042, y: 0.576 },
+    { id: 'maths-in1',    label: 'In 1',     type: 'cv-in',       x: 0.044, y: 0.123 },
     // Channel 4 CV inputs (right column)
-    { id: 'maths-rise4',  label: 'Rise 4',   type: 'cv-in',       x: 0.953, y: 0.253 },
-    { id: 'maths-fall4',  label: 'Fall 4',   type: 'cv-in',       x: 0.953, y: 0.484 },
-    { id: 'maths-in4',    label: 'In 4',     type: 'cv-in',       x: 0.953, y: 0.667 },
+    { id: 'maths-rise4',  label: 'Rise 4',   type: 'cv-in',       x: 0.550, y: 0.401 },
+    { id: 'maths-both4',  label: 'Both 4',   type: 'cv-in',       x: 0.540, y: 0.484 },
+    { id: 'maths-fall4',  label: 'Fall 4',   type: 'cv-in',       x: 0.554, y: 0.576 },
+    { id: 'maths-in4',    label: 'In 4',     type: 'cv-in',       x: 0.548, y: 0.128 },
     // Cycle inputs
-    { id: 'maths-cycle1', label: 'Cycle 1',  type: 'gate-in',     x: 0.076, y: 0.750 },
-    { id: 'maths-cycle4', label: 'Cycle 4',  type: 'gate-in',     x: 0.928, y: 0.750 },
+    { id: 'maths-cycle1', label: 'Cycle 1',  type: 'gate-in',     x: 0.063, y: 0.673 },
+    { id: 'maths-cycle4', label: 'Cycle 4',  type: 'gate-in',     x: 0.536, y: 0.670 },
     // Function outputs (channels 1 & 4)
-    { id: 'maths-fn1',    label: 'Fn 1',     type: 'audio-out',   x: 0.200, y: 0.750 },
-    { id: 'maths-fn4',    label: 'Fn 4',     type: 'audio-out',   x: 0.800, y: 0.750 },
+    { id: 'maths-fn1',    label: 'Fn 1',     type: 'audio-out',   x: 0.119, y: 0.887 },
+    { id: 'maths-fn4',    label: 'Fn 4',     type: 'audio-out',   x: 0.479, y: 0.884 },
+    // Unity outputs (channels 1 & 4)
+    { id: 'maths-unity1', label: 'Unity 1',  type: 'audio-out',   x: 0.195, y: 0.792 },
+    { id: 'maths-unity4', label: 'Unity 4',  type: 'audio-out',   x: 0.406, y: 0.790 },
     // Attenuverter outputs (channels 2 & 3)
-    { id: 'maths-ch2',    label: 'Ch 2',     type: 'audio-out',   x: 0.445, y: 0.750 },
-    { id: 'maths-ch3',    label: 'Ch 3',     type: 'audio-out',   x: 0.560, y: 0.750 },
+    { id: 'maths-ch2',    label: 'Ch 2',     type: 'audio-out',   x: 0.268, y: 0.787 },
+    { id: 'maths-ch3',    label: 'Ch 3',     type: 'audio-out',   x: 0.335, y: 0.790 },
     // Logic & sum outputs (bottom row)
-    { id: 'maths-eor',    label: 'EOR',      type: 'gate-out',    x: 0.074, y: 0.920 },
-    { id: 'maths-or',     label: 'OR',       type: 'gate-out',    x: 0.384, y: 0.920 },
-    { id: 'maths-sum',    label: 'SUM',      type: 'audio-out',   x: 0.501, y: 0.920 },
-    { id: 'maths-inv',    label: 'INV',      type: 'audio-out',   x: 0.616, y: 0.920 },
-    { id: 'maths-eoc',    label: 'EOC',      type: 'gate-out',    x: 0.928, y: 0.920 },
+    { id: 'maths-eor',    label: 'EOR',      type: 'gate-out',    x: 0.044, y: 0.887 },
+    { id: 'maths-or',     label: 'OR',       type: 'gate-out',    x: 0.228, y: 0.890 },
+    { id: 'maths-sum',    label: 'SUM',      type: 'audio-out',   x: 0.297, y: 0.887 },
+    { id: 'maths-inv',    label: 'INV',      type: 'audio-out',   x: 0.362, y: 0.884 },
+    { id: 'maths-eoc',    label: 'EOC',      type: 'gate-out',    x: 0.554, y: 0.890 },
   ] },
   { id: 'mimeophon', name: 'Mimeophon', brand: 'Make Noise', hp: 16, imageDataUrl: mimeophonPanelUrl, imageAspect: 1155 / 1830, jacks: [
     // Audio I/O (top row)

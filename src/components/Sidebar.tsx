@@ -480,9 +480,21 @@ function JackEditor({
           </div>
         )}
 
-        {/* Jack count */}
-        <div className="text-[10px] text-neutral-400">
-          {jacks.length} jack{jacks.length !== 1 ? 's' : ''} placed
+        {/* Jack count + copy */}
+        <div className="flex items-center gap-2 text-[10px] text-neutral-400">
+          <span>{jacks.length} jack{jacks.length !== 1 ? 's' : ''} placed</span>
+          {jacks.length > 0 && (
+            <button
+              onClick={() => {
+                const json = JSON.stringify(jacks, null, 2);
+                navigator.clipboard.writeText(json);
+                console.log('[JackEditor] JSON copied:', json);
+              }}
+              className="text-blue-500 hover:text-blue-700"
+            >
+              Copy JSON
+            </button>
+          )}
         </div>
 
         <div className="flex gap-2">
