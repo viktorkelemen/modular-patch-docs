@@ -1,30 +1,41 @@
 import {
   useState,
   useRef,
+  useMemo,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
-import type { PlacedModule, ModuleTemplate, JackDef, JackType } from '../types';
+import type { PlacedModule, ModuleTemplate, JackType } from '../types';
 import { EURORACK_HEIGHT_PX, PX_PER_HP } from '../types';
+import { canConnect } from '../logic';
 
 interface Props {
   module: PlacedModule;
   template: ModuleTemplate;
+  isSelected: boolean;
   onDragStart: (e: ReactMouseEvent) => void;
   onRemove: () => void;
   onJackDragStart: (jackId: string, e: ReactMouseEvent) => void;
   onJackDrop: (jackId: string) => void;
   isDraggingCable: boolean;
+  draggingCableFrom: { moduleId: string; jackId: string } | null;
+  allModules: PlacedModule[];
+  onContextMenu: (e: ReactMouseEvent) => void;
 }
 
 const JACK_TYPE_COLORS: Record<JackType, string> = {
-  'audio-out': '#3b82f6',
-  'cv-in': '#f97316',
+  'audio-out': '#3b82f6',    // blue
+  'cv-in': '#f97316',        // orange
+  'gate-out': '#22c55e',     // green
+  'gate-in': '#a855f7',      // purple
+  'trigger-out': '#ef4444',  // red
+  'trigger-in': '#ec4899',   // pink
 };
 
 export function ModulePanel({
-  module, template,
+  module, template, isSelected,
   onDragStart, onRemove,
   onJackDragStart, onJackDrop, isDraggingCable,
+  draggingCableFrom, allModules, onContextMenu,
 }: Props) {
   const [hovered, setHovered] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -33,6 +44,18 @@ export function ModulePanel({
     ? EURORACK_HEIGHT_PX * template.imageAspect
     : template.hp * PX_PER_HP;
   const height = EURORACK_HEIGHT_PX;
+
+  // Pre-compute which jacks are valid drop targets
+  const validTargets = useMemo(() => {
+    if (!draggingCableFrom) return new Set<string>();
+    const targets = new Set<string>();
+    for (const jack of module.jacks) {
+      if (canConnect(draggingCableFrom.moduleId, draggingCableFrom.jackId, module.id, jack.id, allModules)) {
+        targets.add(jack.id);
+      }
+    }
+    return targets;
+  }, [draggingCableFrom, module, allModules]);
 
   return (
     <div
@@ -45,6 +68,7 @@ export function ModulePanel({
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onContextMenu={onContextMenu}
     >
       {/* Module surface */}
       <div
@@ -52,7 +76,8 @@ export function ModulePanel({
         className="relative w-full h-full"
         style={{
           background: template.imageDataUrl ? undefined : '#f5f5f0',
-          border: `1px solid ${hovered ? '#bbb' : '#ccc'}`,
+          border: `1px solid ${isSelected ? '#3b82f6' : hovered ? '#bbb' : '#ccc'}`,
+          boxShadow: isSelected ? '0 0 0 2px rgba(59,130,246,0.3)' : undefined,
           cursor: 'grab',
         }}
         onMouseDown={onDragStart}
@@ -75,6 +100,7 @@ export function ModulePanel({
         {/* Jack markers */}
         {module.jacks.map(jack => {
           const color = JACK_TYPE_COLORS[jack.type];
+          const isValidTarget = isDraggingCable && validTargets.has(jack.id);
           return (
             <div
               key={jack.id}
@@ -97,13 +123,15 @@ export function ModulePanel({
             >
               {/* Outer glow */}
               <div
-                className="absolute rounded-full transition-transform duration-150 group-hover:scale-[1.4]"
+                className={`absolute rounded-full transition-transform duration-150 ${isValidTarget ? 'scale-[1.5]' : 'group-hover:scale-[1.4]'}`}
                 style={{
                   width: 20,
                   height: 20,
                   background: `${color}40`,
                   border: `2px solid ${color}`,
-                  boxShadow: `0 0 6px ${color}80, 0 0 12px ${color}40`,
+                  boxShadow: isValidTarget
+                    ? `0 0 8px ${color}, 0 0 16px ${color}80`
+                    : `0 0 6px ${color}80, 0 0 12px ${color}40`,
                 }}
               />
               {/* White contrast ring */}
