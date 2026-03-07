@@ -60,6 +60,13 @@ export interface PatchState {
   patchDescription?: string;
 }
 
+export interface SavedPatch {
+  id: string;
+  name: string;
+  savedAt: number;
+  state: PatchState;
+}
+
 export const CABLE_COLORS = [
   '#e53935', // red
   '#fdd835', // yellow

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
-import type { ModuleTemplate, PlacedModule, Cable, PatchState } from './types';
+import type { ModuleTemplate, PlacedModule, Cable, PatchState, SavedPatch } from './types';
 import {
   CABLE_COLORS,
   DEFAULT_TEMPLATES,
@@ -9,6 +9,10 @@ import { Sidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
 import { CableLegend } from './components/CableLegend';
 import { StatusBar } from './components/StatusBar';
+import { SavePatchDialog } from './components/SavePatchDialog';
+import { LoadPatchDialog } from './components/LoadPatchDialog';
+import { SheetsPanel } from './components/SheetsPanel';
+import { savePatchToDB } from './db';
 import {
   findPlacementX,
   resolveCollision,
@@ -66,6 +70,9 @@ export default function App() {
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [legendOpen, setLegendOpen] = useState(true);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [loadDialogOpen, setLoadDialogOpen] = useState(false);
+  const [sheetsPanelOpen, setSheetsPanelOpen] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const cableColorIndex = useRef(saved.current?.cables?.length ?? 0);
 
@@ -109,6 +116,12 @@ export default function App() {
   // ── Keyboard shortcuts ──
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // Save: Cmd+S
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        setSaveDialogOpen(true);
+        return;
+      }
       // Undo: Cmd+Z (no Shift)
       if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
@@ -246,6 +259,29 @@ export default function App() {
     };
     setModules(prev => [...prev, newMod]);
   }, [modules, templates, pushHistory]);
+
+  // ── Save / Load from IndexedDB ──
+  const handleSavePatch = useCallback(async (name: string) => {
+    const patch: SavedPatch = {
+      id: uuid(),
+      name,
+      savedAt: Date.now(),
+      state: { templates, modules, cables, patchName, patchDescription },
+    };
+    await savePatchToDB(patch);
+    setSaveDialogOpen(false);
+  }, [templates, modules, cables, patchName, patchDescription]);
+
+  const handleLoadPatch = useCallback((patch: SavedPatch) => {
+    pushHistory();
+    const s = patch.state;
+    if (s.templates) setTemplates(s.templates);
+    if (s.modules) setModules(s.modules);
+    if (s.cables) setCables(s.cables);
+    if (s.patchName != null) setPatchName(s.patchName);
+    if (s.patchDescription != null) setPatchDescription(s.patchDescription);
+    setLoadDialogOpen(false);
+  }, [pushHistory]);
 
   const exportJSON = useCallback(() => {
     const state: PatchState = { templates, modules, cables, patchName, patchDescription };
@@ -507,6 +543,26 @@ export default function App() {
         onExportPDF={exportPDF}
         onExportJSON={exportJSON}
         onImportJSON={importJSON}
+        onSave={() => setSaveDialogOpen(true)}
+        onLoad={() => setLoadDialogOpen(true)}
+        onSync={() => setSheetsPanelOpen(true)}
+      />
+
+      <SavePatchDialog
+        defaultName={patchName || 'Untitled'}
+        open={saveDialogOpen}
+        onClose={() => setSaveDialogOpen(false)}
+        onSave={handleSavePatch}
+      />
+      <LoadPatchDialog
+        open={loadDialogOpen}
+        onClose={() => setLoadDialogOpen(false)}
+        onLoad={handleLoadPatch}
+      />
+      <SheetsPanel
+        open={sheetsPanelOpen}
+        onClose={() => setSheetsPanelOpen(false)}
+        onPatchesImported={() => {}}
       />
     </div>
   );
