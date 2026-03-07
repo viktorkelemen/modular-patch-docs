@@ -6,10 +6,12 @@ import {
   useEffect,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
-import type { PlacedModule, Cable, ModuleTemplate, JackDef } from '../types';
+
+import type { PlacedModule, Cable, ModuleTemplate } from '../types';
 import { EURORACK_HEIGHT_PX, PX_PER_HP } from '../types';
 import { ModulePanel } from './ModulePanel';
 import { PatchCables } from './PatchCables';
+import { canConnect } from '../logic';
 
 interface Props {
   modules: PlacedModule[];
@@ -19,8 +21,6 @@ interface Props {
   onZoomChange: (z: number) => void;
   onMoveModule: (id: string, x: number, y: number) => void;
   onRemoveModule: (id: string) => void;
-  onUpdateJacks: (moduleId: string, jacks: JackDef[]) => void;
-  onUpdateTemplateJacks: (templateId: string, jacks: JackDef[]) => void;
   onAddCable: (fromModuleId: string, fromJackId: string, toModuleId: string, toJackId: string) => void;
   onRemoveCable: (cableId: string) => void;
   highlightedCableId: string | null;
@@ -29,7 +29,7 @@ interface Props {
 export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
   {
     modules, cables, templates, zoom, onZoomChange,
-    onMoveModule, onRemoveModule, onUpdateJacks, onUpdateTemplateJacks,
+    onMoveModule, onRemoveModule,
     onAddCable, onRemoveCable, highlightedCableId,
   },
   ref,
@@ -55,9 +55,6 @@ export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
     offsetX: number;
     offsetY: number;
   } | null>(null);
-
-  // Editing jacks
-  const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
 
   const screenToCanvas = useCallback((clientX: number, clientY: number) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -129,7 +126,6 @@ export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
   }, [zoom, onZoomChange]);
 
   const handleModuleDragStart = useCallback((moduleId: string, e: ReactMouseEvent) => {
-    if (editingModuleId) return;
     const pos = screenToCanvas(e.clientX, e.clientY);
     const mod = modules.find(m => m.id === moduleId);
     if (!mod) return;
@@ -138,7 +134,7 @@ export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
       offsetX: pos.x - mod.x,
       offsetY: pos.y - mod.y,
     });
-  }, [editingModuleId, modules, screenToCanvas]);
+  }, [modules, screenToCanvas]);
 
   const getJackWorldPos = useCallback((moduleId: string, jackId: string) => {
     const mod = modules.find(m => m.id === moduleId);
@@ -174,10 +170,12 @@ export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
 
   const handleJackDrop = useCallback((moduleId: string, jackId: string) => {
     if (draggingCable && (draggingCable.fromModuleId !== moduleId || draggingCable.fromJackId !== jackId)) {
-      onAddCable(draggingCable.fromModuleId, draggingCable.fromJackId, moduleId, jackId);
+      if (canConnect(draggingCable.fromModuleId, draggingCable.fromJackId, moduleId, jackId, modules)) {
+        onAddCable(draggingCable.fromModuleId, draggingCable.fromJackId, moduleId, jackId);
+      }
     }
     setDraggingCable(null);
-  }, [draggingCable, onAddCable]);
+  }, [draggingCable, onAddCable, modules]);
 
   return (
     <div
@@ -208,8 +206,6 @@ export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
         {/* SVG cable layer */}
         <PatchCables
           cables={cables}
-          modules={modules}
-          templates={templates}
           getJackWorldPos={getJackWorldPos}
           highlightedCableId={highlightedCableId}
           onRemoveCable={onRemoveCable}
@@ -225,13 +221,8 @@ export const Canvas = forwardRef<HTMLDivElement, Props>(function Canvas(
               key={mod.id}
               module={mod}
               template={template}
-              isEditing={editingModuleId === mod.id}
-              onStartEditing={() => setEditingModuleId(mod.id)}
-              onStopEditing={() => setEditingModuleId(null)}
               onDragStart={e => handleModuleDragStart(mod.id, e)}
               onRemove={() => onRemoveModule(mod.id)}
-              onUpdateJacks={jacks => onUpdateJacks(mod.id, jacks)}
-              onUpdateTemplateJacks={jacks => onUpdateTemplateJacks(template.id, jacks)}
               onJackDragStart={(jackId, e) => handleJackDragStart(mod.id, jackId, e)}
               onJackDrop={jackId => handleJackDrop(mod.id, jackId)}
               isDraggingCable={!!draggingCable}

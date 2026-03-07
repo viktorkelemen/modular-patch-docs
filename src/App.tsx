@@ -1,12 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
-import type {
-  ModuleTemplate,
-  PlacedModule,
-  Cable,
-  PatchState,
-  JackDef,
-} from './types';
+import type { ModuleTemplate } from './types';
 import {
   CABLE_COLORS,
   DEFAULT_TEMPLATES,
@@ -15,17 +9,32 @@ import { Sidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
 import { CableLegend } from './components/CableLegend';
 import { StatusBar } from './components/StatusBar';
+import {
+  getModuleWidth as getModWidth,
+  findPlacementX,
+  resolveCollision,
+  loadSaved,
+  savePatch,
+} from './logic';
 
 export default function App() {
-  const [templates, setTemplates] = useState<ModuleTemplate[]>(DEFAULT_TEMPLATES);
-  const [modules, setModules] = useState<PlacedModule[]>([]);
-  const [cables, setCables] = useState<Cable[]>([]);
+  const saved = useRef(loadSaved());
+  const [templates, setTemplates] = useState<ModuleTemplate[]>(
+    saved.current?.templates ?? DEFAULT_TEMPLATES,
+  );
+  const [modules, setModules] = useState<PlacedModule[]>(saved.current?.modules ?? []);
+  const [cables, setCables] = useState<Cable[]>(saved.current?.cables ?? []);
   const [highlightedCableId, setHighlightedCableId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [legendOpen, setLegendOpen] = useState(true);
   const canvasRef = useRef<HTMLDivElement>(null);
-  const cableColorIndex = useRef(0);
+  const cableColorIndex = useRef(saved.current?.cables?.length ?? 0);
+
+  // Auto-save to localStorage
+  useEffect(() => {
+    savePatch({ templates, modules, cables });
+  }, [templates, modules, cables]);
 
   const addTemplate = useCallback((t: ModuleTemplate) => {
     setTemplates(prev => {
@@ -40,15 +49,16 @@ export default function App() {
   const placeModule = useCallback((templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     if (!template) return;
-    const mod: PlacedModule = {
+
+    const mod = {
       id: uuid(),
       templateId,
-      x: 200 + Math.random() * 200,
-      y: 100 + Math.random() * 100,
+      x: findPlacementX(modules, templates),
+      y: 100,
       jacks: template.jacks.map(j => ({ ...j, id: uuid() })),
     };
     setModules(prev => [...prev, mod]);
-  }, [templates]);
+  }, [templates, modules]);
 
   const removeModule = useCallback((moduleId: string) => {
     setModules(prev => prev.filter(m => m.id !== moduleId));
@@ -56,16 +66,12 @@ export default function App() {
   }, []);
 
   const updateModulePosition = useCallback((moduleId: string, x: number, y: number) => {
-    setModules(prev => prev.map(m => m.id === moduleId ? { ...m, x, y } : m));
-  }, []);
+    setModules(prev => {
+      const pos = resolveCollision(moduleId, x, y, prev, templates);
+      return prev.map(m => m.id === moduleId ? { ...m, ...pos } : m);
+    });
+  }, [templates]);
 
-  const updateModuleJacks = useCallback((moduleId: string, jacks: JackDef[]) => {
-    setModules(prev => prev.map(m => m.id === moduleId ? { ...m, jacks } : m));
-  }, []);
-
-  const updateTemplateJacks = useCallback((templateId: string, jacks: JackDef[]) => {
-    setTemplates(prev => prev.map(t => t.id === templateId ? { ...t, jacks } : t));
-  }, []);
 
   const addCable = useCallback((fromModuleId: string, fromJackId: string, toModuleId: string, toJackId: string) => {
     const color = CABLE_COLORS[cableColorIndex.current % CABLE_COLORS.length];
@@ -155,8 +161,6 @@ export default function App() {
             onZoomChange={setZoom}
             onMoveModule={updateModulePosition}
             onRemoveModule={removeModule}
-            onUpdateJacks={updateModuleJacks}
-            onUpdateTemplateJacks={updateTemplateJacks}
             onAddCable={addCable}
             onRemoveCable={removeCable}
             highlightedCableId={highlightedCableId}

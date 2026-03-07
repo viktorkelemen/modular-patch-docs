@@ -1,9 +1,7 @@
-import type { Cable, PlacedModule, ModuleTemplate } from '../types';
+import type { Cable } from '../types';
 
 interface Props {
   cables: Cable[];
-  modules: PlacedModule[];
-  templates: ModuleTemplate[];
   getJackWorldPos: (moduleId: string, jackId: string) => { x: number; y: number };
   highlightedCableId: string | null;
   onRemoveCable: (id: string) => void;
