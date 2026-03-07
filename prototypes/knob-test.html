@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knob Prototype — Maths</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    color: #ccc;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px;
+    user-select: none;
+  }
+  h1 { font-size: 16px; margin-bottom: 4px; color: #fff; }
+  .subtitle { font-size: 11px; color: #888; margin-bottom: 20px; }
+
+  .panel-container {
+    position: relative;
+    display: inline-block;
+  }
+  .panel-container img {
+    display: block;
+    height: 600px;
+    pointer-events: none;
+  }
+
+  /* Knob overlay */
+  .knob {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    cursor: ns-resize;
+    touch-action: none;
+  }
+  .knob:hover .knob-ring { opacity: 0.9; }
+  .knob.active .knob-ring { opacity: 1; }
+
+  /* Value tooltip */
+  .knob-tooltip {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+  }
+  .knob:hover .knob-tooltip,
+  .knob.active .knob-tooltip { opacity: 1; }
+
+  /* Info panel */
+  .info {
+    margin-top: 20px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .info-card {
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 10px 14px;
+    min-width: 120px;
+    text-align: center;
+  }
+  .info-card .label { font-size: 10px; color: #888; margin-bottom: 4px; }
+  .info-card .value { font-size: 14px; color: #fff; font-weight: 600; }
+
+  .instructions {
+    margin-top: 16px;
+    font-size: 11px;
+    color: #666;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  /* Style selector */
+  .style-selector {
+    margin-bottom: 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .style-selector label { font-size: 11px; color: #888; }
+  .style-btn {
+    background: #252525;
+    border: 1px solid #444;
+    color: #ccc;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .style-btn.active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #fff;
+  }
+
+  /* Edit mode */
+  .mode-toggle {
+    margin-bottom: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .mode-btn {
+    background: #252525;
+    border: 1px solid #444;
+    color: #ccc;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+  }
+  .mode-btn.active {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #fff;
+  }
+  .knob.edit-mode {
+    cursor: grab;
+    outline: 2px dashed rgba(239, 68, 68, 0.6);
+    outline-offset: 2px;
+    border-radius: 50%;
+  }
+  .knob.edit-mode:active { cursor: grabbing; }
+
+  /* JSON output */
+  .json-output {
+    margin-top: 16px;
+    width: 100%;
+    max-width: 700px;
+  }
+  .json-output textarea {
+    width: 100%;
+    height: 220px;
+    background: #111;
+    color: #4ade80;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    resize: vertical;
+  }
+  .json-output .copy-btn {
+    margin-top: 6px;
+    background: #252525;
+    border: 1px solid #444;
+    color: #ccc;
+    padding: 4px 14px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .json-output .copy-btn:hover { background: #333; }
+  .json-output .copy-btn.copied { background: #22c55e; color: #000; border-color: #22c55e; }
+
+  /* Toggle button overlay */
+  .toggle-btn {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    touch-action: none;
+    border-radius: 4px;
+  }
+  .toggle-btn.edit-mode {
+    cursor: grab;
+    outline: 2px dashed rgba(239, 68, 68, 0.6);
+    outline-offset: 2px;
+  }
+  .toggle-btn .toggle-indicator {
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s;
+  }
+  .toggle-btn .toggle-indicator.off {
+    background: rgba(0,0,0,0.4);
+    color: #888;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .toggle-btn .toggle-indicator.on {
+    background: rgba(34,197,94,0.5);
+    color: #fff;
+    border: 1px solid rgba(34,197,94,0.8);
+    box-shadow: 0 0 8px rgba(34,197,94,0.4);
+  }
+  .toggle-btn .toggle-tooltip {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+  }
+  .toggle-btn:hover .toggle-tooltip { opacity: 1; }
+</style>
+</head>
+<body>
+
+<h1>Knob Interaction Prototype — Make Noise Maths</h1>
+<p class="subtitle">Testing knob overlay rendering and interaction on a real module panel</p>
+
+<div class="mode-toggle">
+  <label style="font-size:11px;color:#888;">Mode:</label>
+  <button class="mode-btn active" id="mode-play">Play (turn knobs)</button>
+  <button class="mode-btn" id="mode-edit">Edit positions (drag to move)</button>
+</div>
+
+<div class="style-selector">
+  <label>Knob style:</label>
+  <button class="style-btn active" data-style="arc">Arc indicator</button>
+  <button class="style-btn" data-style="line">Pointer line</button>
+  <button class="style-btn" data-style="dot">Dot marker</button>
+  <button class="style-btn" data-style="ghost">Ghost (invisible)</button>
+</div>
+
+<div class="panel-container" id="panel">
+  <img src="../src/assets/maths-panel.png" alt="Make Noise Maths" />
+  <!-- Knobs will be injected here by JS -->
+</div>
+
+<div class="info" id="info"></div>
+
+<div class="instructions" id="instructions-play">
+  <strong>Play mode:</strong>
+  Drag vertically to turn knobs &nbsp;|&nbsp;
+  Ctrl+drag for fine control &nbsp;|&nbsp;
+  Double-click to reset &nbsp;|&nbsp;
+  Scroll wheel to adjust
+</div>
+<div class="instructions" id="instructions-edit" style="display:none;">
+  <strong>Edit mode:</strong>
+  Drag knobs to reposition them on the panel &nbsp;|&nbsp;
+  Scroll wheel to resize &nbsp;|&nbsp;
+  JSON updates live below
+</div>
+
+<div class="json-output" id="json-output" style="display:none;">
+  <textarea id="json-text" readonly></textarea>
+  <button class="copy-btn" id="copy-btn">Copy JSON</button>
+</div>
+
+<script>
+// ─── Knob definitions for Maths ───────────────────────────────────
+// Positions are fractions (0-1) of the panel image, measured from the PNG
+const KNOBS = [
+  // Large knobs — Rise/Fall for Ch1 and Ch4
+  // Measured from 1450x1830 natural image pixels → fractions
+  // Large knobs — Rise/Fall for Ch1 (left) and Ch4 (right)
+  { id: 'rise1',  label: 'Rise 1',     x: 0.299, y: 0.252, size: 60, defaultValue: 0.5 },
+  { id: 'fall1',  label: 'Fall 1',     x: 0.300, y: 0.429, size: 60, defaultValue: 0.5 },
+  { id: 'rise4',  label: 'Rise 4',     x: 0.706, y: 0.250, size: 60, defaultValue: 0.5 },
+  { id: 'fall4',  label: 'Fall 4',     x: 0.704, y: 0.432, size: 60, defaultValue: 0.5 },
+  // Log/Exp response knobs — below Fall on each side
+  { id: 'logexp1', label: 'Log/Exp 1', x: 0.300, y: 0.620, size: 52, defaultValue: 0.5 },
+  { id: 'logexp4', label: 'Log/Exp 4', x: 0.704, y: 0.620, size: 52, defaultValue: 0.5 },
+  // Center column — attenuverters 1-4 top to bottom
+  { id: 'attn1', label: 'Attn 1',      x: 0.498, y: 0.178, size: 44, defaultValue: 0.5 },
+  { id: 'attn2', label: 'Attn 2',      x: 0.496, y: 0.336, size: 44, defaultValue: 0.5 },
+  { id: 'attn3', label: 'Attn 3',      x: 0.496, y: 0.481, size: 44, defaultValue: 0.5 },
+  { id: 'attn4', label: 'Attn 4',      x: 0.498, y: 0.636, size: 40, defaultValue: 0.5 },
+];
+
+// ─── Toggle definitions ───────────────────────────────────────────
+const TOGGLES = [
+  { id: 'cycle1', label: 'Cycle 1', x: 0.076, y: 0.720, size: 24, defaultValue: false },
+  { id: 'cycle4', label: 'Cycle 4', x: 0.928, y: 0.720, size: 24, defaultValue: false },
+];
+
+const toggleValues = {};
+TOGGLES.forEach(t => { toggleValues[t.id] = t.defaultValue; });
+
+const SWEEP_DEG = 270;       // total rotation sweep
+const START_DEG = -135;      // starting angle (fully CCW)
+const DRAG_SENSITIVITY = 0.004;
+const FINE_MULTIPLIER = 0.1;
+const WHEEL_SENSITIVITY = 0.002;
+
+// ─── State ────────────────────────────────────────────────────────
+const knobValues = {};
+KNOBS.forEach(k => { knobValues[k.id] = k.defaultValue; });
+
+let activeKnob = null;   // { id, startY, startValue } (play mode) or { id, startX, startY, origX, origY } (edit mode)
+let currentStyle = 'arc';
+let editMode = false;
+
+// ─── Rendering ────────────────────────────────────────────────────
+function valueToAngle(value) {
+  return START_DEG + value * SWEEP_DEG;
+}
+
+function createKnobSVG(knob, value) {
+  const angle = valueToAngle(value);
+  const s = knob.size;
+  const r = s / 2 - 3;
+  const cx = s / 2, cy = s / 2;
+
+  // Convert angle to radians for math
+  const rad = angle * Math.PI / 180;
+  const tipX = cx + r * Math.sin(rad);
+  const tipY = cy - r * Math.cos(rad);
+
+  // Arc path (from start angle to current angle)
+  const startRad = START_DEG * Math.PI / 180;
+  const arcStartX = cx + r * Math.sin(startRad);
+  const arcStartY = cy - r * Math.cos(startRad);
+  const largeArc = (angle - START_DEG) > 180 ? 1 : 0;
+
+  switch (currentStyle) {
+    case 'arc':
+      return `
+        <svg viewBox="0 0 ${s} ${s}" width="${s}" height="${s}">
+          <!-- Background ring -->
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+            stroke="rgba(255,255,255,0.12)" stroke-width="3"/>
+          <!-- Value arc -->
+          <path d="M ${arcStartX} ${arcStartY} A ${r} ${r} 0 ${largeArc} 1 ${tipX} ${tipY}"
+            fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+          <!-- Tip dot -->
+          <circle cx="${tipX}" cy="${tipY}" r="3" fill="#3b82f6"/>
+        </svg>`;
+
+    case 'line':
+      return `
+        <svg viewBox="0 0 ${s} ${s}" width="${s}" height="${s}">
+          <!-- Outer ring -->
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+            stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+          <!-- Center dot -->
+          <circle cx="${cx}" cy="${cy}" r="2" fill="rgba(255,255,255,0.4)"/>
+          <!-- Pointer line -->
+          <line x1="${cx}" y1="${cy}" x2="${tipX}" y2="${tipY}"
+            stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>`;
+
+    case 'dot':
+      return `
+        <svg viewBox="0 0 ${s} ${s}" width="${s}" height="${s}">
+          <!-- Faint ring -->
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+            stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
+          <!-- Position dot -->
+          <circle cx="${tipX}" cy="${tipY}" r="4" fill="#f97316"
+            stroke="rgba(0,0,0,0.5)" stroke-width="1"/>
+        </svg>`;
+
+    case 'ghost':
+      return `
+        <svg viewBox="0 0 ${s} ${s}" width="${s}" height="${s}">
+          <!-- Invisible hit area, only shows on hover/active via CSS -->
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+            stroke="rgba(255,255,255,0.06)" stroke-width="2" class="knob-ring"/>
+          <circle cx="${tipX}" cy="${tipY}" r="2.5" fill="rgba(255,255,255,0.25)"/>
+        </svg>`;
+  }
+}
+
+function renderKnobs() {
+  const panel = document.getElementById('panel');
+
+  // Remove existing knob elements
+  panel.querySelectorAll('.knob').forEach(el => el.remove());
+
+  KNOBS.forEach(knob => {
+    const value = knobValues[knob.id];
+    const el = document.createElement('div');
+    el.className = 'knob'
+      + (activeKnob?.id === knob.id ? ' active' : '')
+      + (editMode ? ' edit-mode' : '');
+    el.dataset.id = knob.id;
+    el.style.left = `${knob.x * 100}%`;
+    el.style.top = `${knob.y * 100}%`;
+    el.style.width = `${knob.size}px`;
+    el.style.height = `${knob.size}px`;
+
+    if (editMode) {
+      const pct = v => (v * 100).toFixed(1);
+      el.innerHTML = `
+        <div class="knob-tooltip">${knob.label} (${pct(knob.x)}%, ${pct(knob.y)}%) sz:${knob.size}</div>
+        <div class="knob-ring">${createKnobSVG(knob, value)}</div>
+      `;
+    } else {
+      const pct = Math.round(value * 100);
+      el.innerHTML = `
+        <div class="knob-tooltip">${knob.label}: ${pct}%</div>
+        <div class="knob-ring">${createKnobSVG(knob, value)}</div>
+      `;
+    }
+
+    // Pointer events — different per mode
+    el.addEventListener('pointerdown', e => startDrag(e, knob));
+    if (!editMode) {
+      el.addEventListener('dblclick', () => resetKnob(knob));
+    }
+    el.addEventListener('wheel', e => {
+      if (editMode) { resizeKnob(e, knob); } else { wheelKnob(e, knob); }
+    }, { passive: false });
+
+    panel.appendChild(el);
+  });
+
+  // Render toggles
+  panel.querySelectorAll('.toggle-btn').forEach(el => el.remove());
+
+  TOGGLES.forEach(toggle => {
+    const isOn = toggleValues[toggle.id];
+    const el = document.createElement('div');
+    el.className = 'toggle-btn' + (editMode ? ' edit-mode' : '');
+    el.dataset.id = toggle.id;
+    el.style.left = `${toggle.x * 100}%`;
+    el.style.top = `${toggle.y * 100}%`;
+    el.style.width = `${toggle.size}px`;
+    el.style.height = `${toggle.size}px`;
+
+    if (editMode) {
+      const pct = v => (v * 100).toFixed(1);
+      el.innerHTML = `
+        <div class="toggle-tooltip">${toggle.label} (${pct(toggle.x)}%, ${pct(toggle.y)}%) sz:${toggle.size}</div>
+        <div class="toggle-indicator ${isOn ? 'on' : 'off'}">${isOn ? 'ON' : 'OFF'}</div>
+      `;
+      el.addEventListener('pointerdown', e => startToggleDrag(e, toggle));
+    } else {
+      el.innerHTML = `
+        <div class="toggle-tooltip">${toggle.label}: ${isOn ? 'ON' : 'OFF'}</div>
+        <div class="toggle-indicator ${isOn ? 'on' : 'off'}">${isOn ? 'ON' : 'OFF'}</div>
+      `;
+      el.addEventListener('click', () => {
+        toggleValues[toggle.id] = !toggleValues[toggle.id];
+        renderKnobs();
+      });
+    }
+
+    el.addEventListener('wheel', e => {
+      if (editMode) { resizeToggle(e, toggle); }
+    }, { passive: false });
+
+    panel.appendChild(el);
+  });
+
+  renderInfo();
+}
+
+// ─── Toggle edit-mode drag ────────────────────────────────────────
+let activeToggle = null;
+
+function startToggleDrag(e, toggle) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.target.closest('.toggle-btn')?.setPointerCapture(e.pointerId);
+  activeToggle = {
+    id: toggle.id,
+    startX: e.clientX,
+    startY: e.clientY,
+    origX: toggle.x,
+    origY: toggle.y,
+  };
+}
+
+function resizeToggle(e, toggle) {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -2 : 2;
+  toggle.size = Math.max(12, Math.min(60, toggle.size + delta));
+  renderKnobs();
+  updateJSON();
+}
+
+function renderInfo() {
+  const info = document.getElementById('info');
+  const knobCards = KNOBS.map(knob => {
+    const pct = Math.round(knobValues[knob.id] * 100);
+    return `
+      <div class="info-card">
+        <div class="label">${knob.label}</div>
+        <div class="value">${pct}%</div>
+      </div>
+    `;
+  }).join('');
+  const toggleCards = TOGGLES.map(toggle => {
+    const isOn = toggleValues[toggle.id];
+    return `
+      <div class="info-card">
+        <div class="label">${toggle.label}</div>
+        <div class="value" style="color:${isOn ? '#22c55e' : '#888'}">${isOn ? 'ON' : 'OFF'}</div>
+      </div>
+    `;
+  }).join('');
+  info.innerHTML = knobCards + toggleCards;
+}
+
+// ─── Interaction ──────────────────────────────────────────────────
+function startDrag(e, knob) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.target.closest('.knob')?.setPointerCapture(e.pointerId);
+
+  if (editMode) {
+    activeKnob = {
+      id: knob.id,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: knob.x,
+      origY: knob.y,
+    };
+  } else {
+    activeKnob = {
+      id: knob.id,
+      startY: e.clientY,
+      startValue: knobValues[knob.id],
+    };
+    document.body.style.cursor = 'none';
+  }
+
+  renderKnobs();
+}
+
+function onPointerMove(e) {
+  // Handle toggle drag in edit mode
+  if (activeToggle) {
+    e.preventDefault();
+    const toggle = TOGGLES.find(t => t.id === activeToggle.id);
+    if (!toggle) return;
+    const img = document.querySelector('.panel-container img');
+    const rect = img.getBoundingClientRect();
+    const dx = (e.clientX - activeToggle.startX) / rect.width;
+    const dy = (e.clientY - activeToggle.startY) / rect.height;
+    toggle.x = Math.max(0, Math.min(1, activeToggle.origX + dx));
+    toggle.y = Math.max(0, Math.min(1, activeToggle.origY + dy));
+    renderKnobs();
+    updateJSON();
+    return;
+  }
+
+  if (!activeKnob) return;
+  e.preventDefault();
+
+  const knob = KNOBS.find(k => k.id === activeKnob.id);
+  if (!knob) return;
+
+  if (editMode) {
+    // Move knob position
+    const img = document.querySelector('.panel-container img');
+    const rect = img.getBoundingClientRect();
+    const dx = (e.clientX - activeKnob.startX) / rect.width;
+    const dy = (e.clientY - activeKnob.startY) / rect.height;
+    knob.x = Math.max(0, Math.min(1, activeKnob.origX + dx));
+    knob.y = Math.max(0, Math.min(1, activeKnob.origY + dy));
+    renderKnobs();
+    updateJSON();
+  } else {
+    const sensitivity = e.ctrlKey || e.metaKey
+      ? DRAG_SENSITIVITY * FINE_MULTIPLIER
+      : DRAG_SENSITIVITY;
+    const delta = (activeKnob.startY - e.clientY) * sensitivity;
+    const newValue = Math.max(0, Math.min(1, activeKnob.startValue + delta));
+    knobValues[activeKnob.id] = newValue;
+    renderKnobs();
+  }
+}
+
+function onPointerUp() {
+  if (activeToggle) { activeToggle = null; renderKnobs(); return; }
+  if (!activeKnob) return;
+  activeKnob = null;
+  document.body.style.cursor = '';
+  renderKnobs();
+}
+
+function resetKnob(knob) {
+  knobValues[knob.id] = knob.defaultValue;
+  renderKnobs();
+}
+
+function wheelKnob(e, knob) {
+  e.preventDefault();
+  const sensitivity = e.ctrlKey || e.metaKey
+    ? WHEEL_SENSITIVITY * FINE_MULTIPLIER
+    : WHEEL_SENSITIVITY;
+  const delta = -e.deltaY * sensitivity;
+  knobValues[knob.id] = Math.max(0, Math.min(1, knobValues[knob.id] + delta));
+  renderKnobs();
+}
+
+function resizeKnob(e, knob) {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -2 : 2;
+  knob.size = Math.max(12, Math.min(80, knob.size + delta));
+  renderKnobs();
+  updateJSON();
+}
+
+// ─── Style selector ───────────────────────────────────────────────
+document.querySelectorAll('.style-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentStyle = btn.dataset.style;
+    renderKnobs();
+  });
+});
+
+// ─── Mode toggle ──────────────────────────────────────────────────
+const modePlayBtn = document.getElementById('mode-play');
+const modeEditBtn = document.getElementById('mode-edit');
+
+modePlayBtn.addEventListener('click', () => {
+  editMode = false;
+  modePlayBtn.classList.add('active');
+  modeEditBtn.classList.remove('active');
+  document.getElementById('instructions-play').style.display = '';
+  document.getElementById('instructions-edit').style.display = 'none';
+  document.getElementById('json-output').style.display = 'none';
+  renderKnobs();
+});
+
+modeEditBtn.addEventListener('click', () => {
+  editMode = true;
+  modeEditBtn.classList.add('active');
+  modePlayBtn.classList.remove('active');
+  document.getElementById('instructions-play').style.display = 'none';
+  document.getElementById('instructions-edit').style.display = '';
+  document.getElementById('json-output').style.display = '';
+  updateJSON();
+  renderKnobs();
+});
+
+// ─── JSON output ──────────────────────────────────────────────────
+function updateJSON() {
+  const data = {
+    knobs: KNOBS.map(k => ({
+      id: k.id,
+      label: k.label,
+      x: parseFloat(k.x.toFixed(3)),
+      y: parseFloat(k.y.toFixed(3)),
+      size: k.size,
+      defaultValue: k.defaultValue,
+    })),
+    toggles: TOGGLES.map(t => ({
+      id: t.id,
+      label: t.label,
+      x: parseFloat(t.x.toFixed(3)),
+      y: parseFloat(t.y.toFixed(3)),
+      size: t.size,
+      defaultValue: t.defaultValue,
+    })),
+  };
+  document.getElementById('json-text').value = JSON.stringify(data, null, 2);
+}
+
+document.getElementById('copy-btn').addEventListener('click', () => {
+  const textarea = document.getElementById('json-text');
+  navigator.clipboard.writeText(textarea.value).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy JSON'; btn.classList.remove('copied'); }, 1500);
+  });
+});
+
+// ─── Global listeners ─────────────────────────────────────────────
+document.addEventListener('pointermove', onPointerMove);
+document.addEventListener('pointerup', onPointerUp);
+
+// ─── Init ─────────────────────────────────────────────────────────
+renderKnobs();
+</script>
+</body>
+</html>
