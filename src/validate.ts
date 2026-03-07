@@ -10,7 +10,7 @@ export function validatePatchState(data: unknown): data is PatchState {
   // templates is required but may be empty
   if (!Array.isArray(obj.templates)) return false;
 
-  // Spot-check first module shape
+  // Validate each module's shape
   for (const m of obj.modules as unknown[]) {
     if (m == null || typeof m !== 'object') return false;
     const mod = m as Record<string, unknown>;
@@ -19,7 +19,7 @@ export function validatePatchState(data: unknown): data is PatchState {
     if (!Array.isArray(mod.jacks)) return false;
   }
 
-  // Spot-check first cable shape
+  // Validate each cable's shape
   for (const c of obj.cables as unknown[]) {
     if (c == null || typeof c !== 'object') return false;
     const cab = c as Record<string, unknown>;
