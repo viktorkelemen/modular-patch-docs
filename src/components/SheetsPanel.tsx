@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import type { SavedPatch } from '../types';
-import { listPatches } from '../db';
-import { savePatchToDB } from '../db';
+import { listPatches, savePatchToDB } from '../db';
 import {
   requestAccessToken,
   revokeToken,
   createSpreadsheet,
   pushPatches,
   pullPatches,
+  formatError,
+  TokenExpiredError,
 } from '../sheets';
 
 interface Props {
@@ -34,6 +35,11 @@ export function SheetsPanel({ open, onClose, onPatchesImported }: Props) {
     else localStorage.removeItem(LS_SHEET_ID_KEY);
   };
 
+  const handleTokenExpired = () => {
+    setToken(null);
+    setStatus('Session expired — please reconnect');
+  };
+
   const handleConnect = async () => {
     setBusy(true);
     setStatus('');
@@ -42,7 +48,7 @@ export function SheetsPanel({ open, onClose, onPatchesImported }: Props) {
       setToken(t);
       setStatus('Connected');
     } catch (err) {
-      setStatus(`Auth failed: ${(err as Error).message}`);
+      setStatus(`Auth failed: ${formatError(err)}`);
     } finally {
       setBusy(false);
     }
@@ -63,7 +69,8 @@ export function SheetsPanel({ open, onClose, onPatchesImported }: Props) {
       saveSheetId(id);
       setStatus('Spreadsheet created');
     } catch (err) {
-      setStatus(`Create failed: ${(err as Error).message}`);
+      if (err instanceof TokenExpiredError) return handleTokenExpired();
+      setStatus(`Create failed: ${formatError(err)}`);
     } finally {
       setBusy(false);
     }
@@ -78,7 +85,8 @@ export function SheetsPanel({ open, onClose, onPatchesImported }: Props) {
       await pushPatches(token, spreadsheetId, patches);
       setStatus(`Pushed ${patches.length} patch${patches.length !== 1 ? 'es' : ''}`);
     } catch (err) {
-      setStatus(`Push failed: ${(err as Error).message}`);
+      if (err instanceof TokenExpiredError) return handleTokenExpired();
+      setStatus(`Push failed: ${formatError(err)}`);
     } finally {
       setBusy(false);
     }
@@ -97,7 +105,8 @@ export function SheetsPanel({ open, onClose, onPatchesImported }: Props) {
       onPatchesImported(remote);
       setStatus(`Pulled ${remote.length} patch${remote.length !== 1 ? 'es' : ''}`);
     } catch (err) {
-      setStatus(`Pull failed: ${(err as Error).message}`);
+      if (err instanceof TokenExpiredError) return handleTokenExpired();
+      setStatus(`Pull failed: ${formatError(err)}`);
     } finally {
       setBusy(false);
     }

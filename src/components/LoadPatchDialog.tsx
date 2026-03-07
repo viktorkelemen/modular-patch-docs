@@ -11,14 +11,23 @@ interface Props {
 export function LoadPatchDialog({ open, onClose, onLoad }: Props) {
   const [patches, setPatches] = useState<SavedPatch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    listPatches().then(p => {
-      setPatches(p);
-      setLoading(false);
-    });
+    setError('');
+    setConfirmDeleteId(null);
+    listPatches()
+      .then(p => {
+        setPatches(p);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err instanceof Error ? err.message : 'Failed to load patches');
+        setLoading(false);
+      });
   }, [open]);
 
   if (!open) return null;
@@ -26,6 +35,7 @@ export function LoadPatchDialog({ open, onClose, onLoad }: Props) {
   const handleDelete = async (id: string) => {
     await deletePatchFromDB(id);
     setPatches(prev => prev.filter(p => p.id !== id));
+    setConfirmDeleteId(null);
   };
 
   const fmtDate = (ts: number) => {
@@ -44,6 +54,8 @@ export function LoadPatchDialog({ open, onClose, onLoad }: Props) {
 
         {loading ? (
           <div className="text-xs text-neutral-400 py-4 text-center">Loading...</div>
+        ) : error ? (
+          <div className="text-xs text-red-500 py-4 text-center">{error}</div>
         ) : patches.length === 0 ? (
           <div className="text-xs text-neutral-400 py-4 text-center">No saved patches yet.</div>
         ) : (
@@ -56,11 +68,24 @@ export function LoadPatchDialog({ open, onClose, onLoad }: Props) {
                   <div className="text-sm text-neutral-700 truncate">{p.name}</div>
                   <div className="text-[10px] text-neutral-400">{fmtDate(p.savedAt)}</div>
                 </button>
-                <button onClick={() => handleDelete(p.id)}
-                        className="text-[10px] text-neutral-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                        title="Delete">
-                  Delete
-                </button>
+                {confirmDeleteId === p.id ? (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => handleDelete(p.id)}
+                            className="text-[10px] text-red-500 hover:text-red-700">
+                      Confirm
+                    </button>
+                    <button onClick={() => setConfirmDeleteId(null)}
+                            className="text-[10px] text-neutral-400 hover:text-neutral-600">
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmDeleteId(p.id)}
+                          className="text-[10px] text-neutral-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                          title="Delete">
+                    Delete
+                  </button>
+                )}
               </div>
             ))}
           </div>

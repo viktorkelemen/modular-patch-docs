@@ -38,3 +38,8 @@ export async function deletePatchFromDB(id: string): Promise<void> {
   const db = await getDB();
   await db.delete('patches', id);
 }
+
+export async function patchNameExists(name: string): Promise<boolean> {
+  const all = await listPatches();
+  return all.some(p => p.name === name);
+}

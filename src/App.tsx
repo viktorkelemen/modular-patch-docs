@@ -13,6 +13,7 @@ import { SavePatchDialog } from './components/SavePatchDialog';
 import { LoadPatchDialog } from './components/LoadPatchDialog';
 import { SheetsPanel } from './components/SheetsPanel';
 import { savePatchToDB } from './db';
+import { validatePatchState } from './validate';
 import {
   findPlacementX,
   resolveCollision,
@@ -56,7 +57,7 @@ export default function App() {
       if (m.jacks.length > 0) return m;
       const tpl = tpls.find(t => t.id === m.templateId);
       if (tpl && tpl.jacks.length > 0) {
-        return { ...m, jacks: tpl.jacks.map(j => ({ ...j, id: crypto.randomUUID() })) };
+        return { ...m, jacks: tpl.jacks.map(j => ({ ...j, id: uuid() })) };
       }
       return m;
     });
@@ -173,7 +174,7 @@ export default function App() {
         const existing = m.jacks.find(mj => mj.id === tj.id);
         if (existing) return { ...tj, id: existing.id };
         // Otherwise generate a new id
-        return { ...tj, id: crypto.randomUUID() };
+        return { ...tj, id: uuid() };
       });
       return { ...m, jacks: updated };
     }));
@@ -272,16 +273,23 @@ export default function App() {
     setSaveDialogOpen(false);
   }, [templates, modules, cables, patchName, patchDescription]);
 
-  const handleLoadPatch = useCallback((patch: SavedPatch) => {
+  const applyPatchState = useCallback((s: PatchState) => {
     pushHistory();
-    const s = patch.state;
     if (s.templates) setTemplates(s.templates);
     if (s.modules) setModules(s.modules);
     if (s.cables) setCables(s.cables);
     if (s.patchName != null) setPatchName(s.patchName);
     if (s.patchDescription != null) setPatchDescription(s.patchDescription);
-    setLoadDialogOpen(false);
   }, [pushHistory]);
+
+  const handleLoadPatch = useCallback((patch: SavedPatch) => {
+    if (!validatePatchState(patch.state)) {
+      console.error('Invalid patch data, skipping load:', patch.id);
+      return;
+    }
+    applyPatchState(patch.state);
+    setLoadDialogOpen(false);
+  }, [applyPatchState]);
 
   const exportJSON = useCallback(() => {
     const state: PatchState = { templates, modules, cables, patchName, patchDescription };
@@ -298,19 +306,18 @@ export default function App() {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const state: PatchState = JSON.parse(e.target?.result as string);
-        pushHistory();
-        if (state.templates) setTemplates(state.templates);
-        if (state.modules) setModules(state.modules);
-        if (state.cables) setCables(state.cables);
-        if (state.patchName != null) setPatchName(state.patchName);
-        if (state.patchDescription != null) setPatchDescription(state.patchDescription);
+        const parsed: unknown = JSON.parse(e.target?.result as string);
+        if (!validatePatchState(parsed)) {
+          alert('Invalid patch file: unexpected data format');
+          return;
+        }
+        applyPatchState(parsed);
       } catch {
         alert('Invalid patch file');
       }
     };
     reader.readAsText(file);
-  }, [pushHistory]);
+  }, [applyPatchState]);
 
   const exportPNG = useCallback(async () => {
     const el = canvasRef.current;
@@ -562,7 +569,15 @@ export default function App() {
       <SheetsPanel
         open={sheetsPanelOpen}
         onClose={() => setSheetsPanelOpen(false)}
-        onPatchesImported={() => {}}
+        onPatchesImported={(patches) => {
+          // After pulling, load the most recently saved patch
+          if (patches.length > 0) {
+            const newest = patches.reduce((a, b) => a.savedAt > b.savedAt ? a : b);
+            if (validatePatchState(newest.state)) {
+              applyPatchState(newest.state);
+            }
+          }
+        }}
       />
     </div>
   );

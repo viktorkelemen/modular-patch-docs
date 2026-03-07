@@ -1,4 +1,5 @@
 import type { SavedPatch } from './types';
+import { validatePatchState } from './validate';
 
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 const DISCOVERY = 'https://sheets.googleapis.com/v4/spreadsheets';
@@ -52,40 +53,51 @@ export function revokeToken(token: string): void {
   window.google?.accounts.oauth2.revoke(token);
 }
 
+// ── Error helpers ──
+
+export function formatError(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+export class TokenExpiredError extends Error {
+  constructor() {
+    super('Token expired — please reconnect');
+    this.name = 'TokenExpiredError';
+  }
+}
+
 // ── Sheets helpers ──
 
-async function sheetsGet(token: string, url: string) {
+async function sheetsRequest(token: string, url: string, init?: RequestInit) {
   const resp = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
+    ...init,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      ...init?.headers,
+    },
   });
+  if (resp.status === 401) throw new TokenExpiredError();
   if (!resp.ok) throw new Error(`Sheets API error: ${resp.status} ${resp.statusText}`);
   return resp.json();
 }
 
-async function sheetsPost(token: string, url: string, body: unknown) {
-  const resp = await fetch(url, {
+function sheetsGet(token: string, url: string) {
+  return sheetsRequest(token, url);
+}
+
+function sheetsPost(token: string, url: string, body: unknown) {
+  return sheetsRequest(token, url, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(body),
   });
-  if (!resp.ok) throw new Error(`Sheets API error: ${resp.status} ${resp.statusText}`);
-  return resp.json();
 }
 
-async function sheetsPut(token: string, url: string, body: unknown) {
-  const resp = await fetch(url, {
+function sheetsPut(token: string, url: string, body: unknown) {
+  return sheetsRequest(token, url, {
     method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(body),
   });
-  if (!resp.ok) throw new Error(`Sheets API error: ${resp.status} ${resp.statusText}`);
-  return resp.json();
 }
 
 // ── Public API ──
@@ -118,7 +130,11 @@ export async function pushPatches(
       `${DISCOVERY}/${spreadsheetId}/values/${range}:clear`,
       {},
     );
-  } catch { /* range may not exist yet */ }
+  } catch (err) {
+    // Range may not exist yet on a fresh spreadsheet — only swallow 400s
+    if (err instanceof TokenExpiredError) throw err;
+    console.warn('Clear range failed (may be empty):', formatError(err));
+  }
 
   if (patches.length === 0) return;
 
@@ -145,12 +161,31 @@ export async function pullPatches(
     `${DISCOVERY}/${spreadsheetId}/values/${SHEET_NAME}!A2:D1000`,
   );
   const rows = (data.values ?? []) as string[][];
-  return rows
-    .filter(r => r.length >= 4)
-    .map(r => ({
+  const patches: SavedPatch[] = [];
+
+  for (const r of rows) {
+    if (r.length < 4) {
+      console.warn('Skipping malformed row (expected 4 columns):', r);
+      continue;
+    }
+    let state: unknown;
+    try {
+      state = JSON.parse(r[3]);
+    } catch {
+      console.warn('Skipping row with invalid JSON in stateJSON column:', r[0]);
+      continue;
+    }
+    if (!validatePatchState(state)) {
+      console.warn('Skipping row with invalid PatchState shape:', r[0]);
+      continue;
+    }
+    patches.push({
       id: r[0],
       name: r[1],
       savedAt: Number(r[2]),
-      state: JSON.parse(r[3]),
-    }));
+      state,
+    });
+  }
+
+  return patches;
 }
