@@ -62,6 +62,7 @@ import dpoPanelUrl from './assets/dpo-panel.png';
 import xpoPanelUrl from './assets/xpo-panel.png';
 import mathsPanelUrl from './assets/maths-panel.png';
 import qpasPanelUrl from './assets/qpas-panel.png';
+import mimeophonPanelUrl from './assets/mimeophon-panel.png';
 
 export const DEFAULT_TEMPLATES: ModuleTemplate[] = [
   { id: 'dpo', name: 'DPO', brand: 'Make Noise', hp: 28, imageDataUrl: dpoPanelUrl, imageAspect: 1374 / 1258, jacks: [
@@ -147,4 +148,23 @@ export const DEFAULT_TEMPLATES: ModuleTemplate[] = [
     { id: 'qpas-sp-r',      label: 'SP R',        type: 'audio-out', x: 0.909, y: 0.429 },
   ] },
   { id: 'maths', name: 'Maths', brand: 'Make Noise', hp: 20, imageDataUrl: mathsPanelUrl, imageAspect: 1450 / 1830, jacks: [] },
+  { id: 'mimeophon', name: 'Mimeophon', brand: 'Make Noise', hp: 16, imageDataUrl: mimeophonPanelUrl, imageAspect: 1155 / 1830, jacks: [
+    // Audio I/O (top row)
+    { id: 'mime-in-l',    label: 'In L',       type: 'cv-in',     x: 0.055, y: 0.037 },
+    { id: 'mime-in-r',    label: 'In R',       type: 'cv-in',     x: 0.200, y: 0.037 },
+    { id: 'mime-out-l',   label: 'Out L',      type: 'audio-out', x: 0.760, y: 0.037 },
+    { id: 'mime-out-r',   label: 'Out R',      type: 'audio-out', x: 0.910, y: 0.037 },
+    // CV inputs (middle & bottom)
+    { id: 'mime-repeats', label: 'Repeats',    type: 'cv-in',     x: 0.130, y: 0.295 },
+    { id: 'mime-mix',     label: 'Mix',        type: 'cv-in',     x: 0.490, y: 0.200 },
+    { id: 'mime-zone',    label: 'Zone',       type: 'cv-in',     x: 0.175, y: 0.580 },
+    { id: 'mime-rate',    label: 'Rate',       type: 'cv-in',     x: 0.460, y: 0.490 },
+    { id: 'mime-halo',    label: 'Halo Sat',   type: 'cv-in',     x: 0.860, y: 0.340 },
+    { id: 'mime-color',   label: 'Color',      type: 'cv-in',     x: 0.830, y: 0.570 },
+    // Bottom row
+    { id: 'mime-clock',   label: 'Clock',      type: 'cv-in',     x: 0.065, y: 0.830 },
+    { id: 'mime-hold',    label: 'Hold',       type: 'cv-in',     x: 0.065, y: 0.920 },
+    { id: 'mime-flip',    label: 'Flip',       type: 'cv-in',     x: 0.295, y: 0.870 },
+    { id: 'mime-skew',    label: 'Skew',       type: 'cv-in',     x: 0.910, y: 0.870 },
+  ] },
 ];
